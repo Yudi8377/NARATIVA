@@ -36,3 +36,11 @@ The Supabase project currently includes core tables for profiles, books, version
 ## Development status
 
 This repository is being initialized with the product blueprint. Treat the roadmap as planned work, not as a claim that all listed features are implemented.
+
+## Website prototype
+
+- Source: [`website/index.html`](website/index.html), [`website/theme.css`](website/theme.css), [`website/app.js`](website/app.js).
+- Hosted preview: https://narativa-one-story.hatchable.site
+- The Creator Studio scene planner runs locally in the browser. It is a prototype, not a connected generative-AI production pipeline.
+- Hosting deployment is live, but the Hatchable project is currently private by default. To allow anonymous public visitors, change project visibility to **Public** in the [Hatchable project settings](https://hatchable.com/console/projects/narativa-one-story).
+- See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the deployment and release notes.
