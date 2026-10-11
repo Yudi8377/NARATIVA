@@ -27,12 +27,17 @@ NARATIVA is a creative-work universe: one creator identity and canonical asset c
 - `website/index.html` — public NARATIVA website and concept.
 - `website/spaces.html` — experience router / choose a workspace.
 - `website/reader.html` — reader discovery, filters, reading preview, and local saved list.
-- `website/creator.html` — writing/comic workspace, local drafts, asset preview, and rights fields.
+- `website/creator.html` — writing/comic workspace, cloud work/version saving, private asset upload, and rights fields.
+- `website/learning.html` — Creative Learning Room: local photo metrics, browser-based adjustments, software tutorials for Photoshop/Lightroom/CorelDRAW, and optional browser text-to-speech.
 - `website/commerce.html` — local product catalog and vendor connector readiness status.
 - `website/admin.html` — admin-console shell and governance checklist. Privileged actions are intentionally disabled until server-side role enforcement exists.
 - `website/experience.css` and `website/experiences.js` — shared responsive visual system and interactions for the role-specific spaces.
 
 See [Adaptive Experiences Architecture](docs/ADAPTIVE-EXPERIENCES.md) for the UI contracts and explicit release limitations. Public sitemap: https://yudi8377.github.io/NARATIVA/sitemap.xml.
+
+## Creative Learning Room
+
+The initial learning room measures basic image brightness/tonal distribution locally, offers browser-based adjustments, and provides step-by-step software learning guides with optional browser speech. It is not yet a vision-model assessment, live screen-aware assistant, or direct Photoshop/Corel integration. Photos remain local in this release.
 
 ## Collective Intelligence foundation
 
