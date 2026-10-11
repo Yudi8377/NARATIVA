@@ -185,6 +185,7 @@
     });
     $('undoEdit').addEventListener('click', () => {
       clearTimeout(historyTimer);
+      if (editHistory[editHistoryIndex] !== editor.value) rememberEdit();
       if (editHistoryIndex > 0) { editHistoryIndex--; editor.value = editHistory[editHistoryIndex]; editor.focus(); updateEditorCount(); lastStoryboard = null; }
     });
     $('redoEdit').addEventListener('click', () => {
