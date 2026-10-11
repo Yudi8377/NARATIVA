@@ -107,3 +107,11 @@
 .x-local-reader-toolbar button:disabled{opacity:.35;cursor:not-allowed}
 .x-reader-content{white-space:pre-wrap;overflow-wrap:anywhere;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.95;letter-spacing:.01em;color:#e6e0d5;background:#171c22;border:1px solid #ffffff12;border-radius:10px;padding:clamp(16px,4vw,34px);max-height:58vh;overflow:auto;scroll-behavior:smooth}
 @media(max-width:600px){.x-reader-taxonomy{display:grid;grid-template-columns:1fr}.x-local-reader-toolbar{gap:6px}.x-local-reader-toolbar .x-button{padding:9px 10px;font-size:11px}.x-reader-content{font-size:15px;line-height:1.85}}
+
+/* Reader category/type filters share one horizontal row */
+.x-reader-category-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;max-width:100%;margin:0 0 14px}
+.x-reader-category-bar .x-filter-btn{white-space:nowrap;padding:8px 12px;font-size:11px}
+.x-reader-taxonomy{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px;padding:12px 14px;border:1px solid #ffffff12;border-radius:10px;background:#141b24}
+.x-reader-taxonomy label{display:flex!important;align-items:center;gap:10px;margin:0!important;white-space:nowrap}
+.x-reader-taxonomy select{min-width:180px;width:auto!important;padding:8px 10px!important;font-size:11px}
+@media(max-width:680px){.x-reader-category-bar{flex-wrap:nowrap;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:thin}.x-reader-category-bar .x-filter-btn{flex:0 0 auto}.x-reader-taxonomy label{width:100%;justify-content:space-between}.x-reader-taxonomy select{flex:1;min-width:0;max-width:70%}}
