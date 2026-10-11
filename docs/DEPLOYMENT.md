@@ -21,7 +21,7 @@
 - `website/index.html`: public brand website / story universe.
 - `website/spaces.html`: role and workspace selector.
 - `website/reader.html`: reader discovery, search/genre filters, reading preview, local saved list.
-- `website/creator.html`: writing and comic workspaces, local draft saving, local file preview, rights/provenance fields.
+- `website/creator.html`: writing and comic workspaces, authenticated cloud work/version saving, explicit publish action, private asset upload, and rights/provenance fields.
 - `website/commerce.html`: local catalog editor and honest vendor readiness statuses.
 - `website/admin.html`: governance shell with privileged actions disabled until server-side authorization is implemented.
 - `website/experience.css`, `website/experiences.js`: responsive styles and local browser interactions.
@@ -44,7 +44,7 @@
 - Check `/`, `/spaces.html`, `/reader.html`, `/creator.html`, `/commerce.html`, and `/admin.html`.
 - Verify mobile layout, keyboard navigation, reduced motion, page titles, and browser console.
 - Reader: filter stories, open/close reading modal, save a story, and verify the saved list is local to that browser.
-- Creator: switch between writing/comic modes, create outline, save a draft, and preview a selected image; confirm the UI says files are not uploaded.
+- Creator: switch between writing/comic modes, verify storyboard submission is blocked until processing consent is checked, save a version, reopen it, upload a small test file, and confirm the asset metadata is visible only to its owner.
 - Commerce: add a catalog item and confirm vendor buttons never claim to have connected or published anything.
 - Admin: confirm no privileged data or controls are exposed to an anonymous visitor.
 - Collective AI: configure Supabase Auth Site URL/Redirect URLs, then test sign-up, email confirmation, sign-in/out, owner-scoped agent/task creation, and private/shared submission boundaries.
@@ -52,8 +52,8 @@
 
 ## Remaining production gaps
 
-- Local reader, creator, and commerce state is not cloud-synced, backed up, or shared across devices.
-- Asset upload is currently a local preview only; no production object storage or virus/file validation pipeline is connected.
+- Reader bookmarks and unauthenticated creator drafts remain local and are not synchronized. Authenticated creator works, versions, and asset metadata are cloud-backed.
+- Private asset uploads use Supabase Storage and owner-folder RLS, but malware scanning, content validation beyond MIME/size constraints, media processing, and signed-download UX are not implemented.
 - Autonomous AI agent execution and fan-out are not implemented.
 - Model provider integration, model budget enforcement, retry/cancellation worker, and moderation review actions are not implemented.
 - Vendor connector cards are not active API integrations.
