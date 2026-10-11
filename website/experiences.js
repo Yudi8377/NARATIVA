@@ -26,7 +26,7 @@
       $('closeReader').focus();
       safeStore.set('narativa-reader-last', { id: active, progress: 0, at: new Date().toISOString() });
     }
-    document.querySelectorAll('[data-read]').forEach(btn => btn.addEventListener('click', () => openStory(btn.dataset.read)));
+    $('storyGrid').addEventListener('click', event => { const btn = event.target.closest('[data-read]'); if (btn) openStory(btn.dataset.read); });
     $('closeReader').addEventListener('click', () => { modal.hidden = true; });
     modal.addEventListener('click', e => { if (e.target === modal) modal.hidden = true; });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) modal.hidden = true; });
