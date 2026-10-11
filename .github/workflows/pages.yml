@@ -36,6 +36,18 @@ jobs:
           test -s website/vendor/supabase.js
           node --check website/connector-manager.js
           node --check website/learning.js
+          node --check website/reader-catalog.js
+          node --check website/experiences.js
+          test -s website/library/comics/kota-di-atas-awan/page-01.svg
+          test -s website/library/comics/kota-di-atas-awan/page-06.svg
+          test -s website/library/manga/komet-terakhir/page-01.svg
+          test -s website/library/manga/komet-terakhir/page-04.svg
+          test -s website/library/anime/satu-bintang-lagi.html
+          test -s website/library/importer.html
+          grep -q 'local-sky-comic' website/reader-catalog.js
+          grep -q 'local-komet-manga' website/reader-catalog.js
+          grep -q 'local-anime-star' website/reader-catalog.js
+          grep -q 'NARATIVA Library Import' .github/workflows/library-import.yml
           grep -q 'id="learningContext"' website/learning.html
           grep -q 'id="masteryCheck"' website/learning.html
           grep -q 'function contextualPlan' website/learning.js
