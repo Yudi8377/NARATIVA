@@ -192,9 +192,8 @@
     renderCatalog();
     renderSaved();
     const search = $('readerSearch');
-    let genre = 'all';
+    let category = 'all';
     const genreFilter = $('readerGenreFilter');
-    const typeFilter = $('readerTypeFilter');
     function filterStories() {
       const query = search.value.trim().toLocaleLowerCase('id');
       let visibleCount = 0;
@@ -202,10 +201,9 @@
         const haystack = ((card.dataset.search || '') + ' ' + (card.dataset.title || '') + ' ' + (card.dataset.genre || '')).toLocaleLowerCase('id');
         const genres = (card.dataset.genre || '').split(' ');
         const tags = (card.dataset.tags || '').split(' ');
-        const type = typeFilter.value;
-        const typeMatch = type === 'all' || card.dataset.type === type || (type === 'cerpen' && card.dataset.type === 'antologi');
+        const categoryMatch = category === 'all' || genres.includes(category) || card.dataset.type === category || (category === 'cerpen' && card.dataset.type === 'antologi');
         const genreMatch = genreFilter.value === 'all' || tags.includes(genreFilter.value);
-        card.hidden = !(haystack.includes(query) && (genre === 'all' || genres.includes(genre)) && genreMatch && typeMatch);
+        card.hidden = !(haystack.includes(query) && categoryMatch && genreMatch);
         if (!card.hidden) visibleCount++;
       });
       $('readerEmpty').hidden = visibleCount > 0;
@@ -213,10 +211,9 @@
     }
     search.addEventListener('input', filterStories);
     genreFilter.addEventListener('change', filterStories);
-    typeFilter.addEventListener('change', filterStories);
-    document.querySelectorAll('[data-genre]').forEach(btn => btn.addEventListener('click', () => {
-      genre = btn.dataset.genre;
-      document.querySelectorAll('[data-genre]').forEach(b => b.classList.toggle('is-selected', b === btn));
+    document.querySelectorAll('[data-category]').forEach(btn => btn.addEventListener('click', () => {
+      category = btn.dataset.category;
+      document.querySelectorAll('[data-category]').forEach(b => b.classList.toggle('is-selected', b === btn));
       filterStories();
     }));
 
