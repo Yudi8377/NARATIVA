@@ -1,0 +1,33 @@
+name: NARATIVA Library Import
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+permissions:
+  contents: write
+concurrency:
+  group: narativa-library-import
+  cancel-in-progress: false
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate and import approved sources
+        run: node scripts/library-import.mjs
+      - name: Commit imported licensed assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/library/imported website/library/import-report.json
+          if git diff --cached --quiet; then
+            echo "No approved source assets changed."
+          else
+            git commit -m "chore(library): sync approved open-license assets"
+            git push
+          fi
