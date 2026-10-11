@@ -87,4 +87,4 @@ The OAuth implementation and migration are in the repository, and the function w
 
 Required setup guide: [ETSY-CONNECTOR-SETUP.md](./ETSY-CONNECTOR-SETUP.md).
 
-The callback handler now consumes the OAuth state atomically, preventing two concurrent/replayed callbacks from both exchanging the same state. The revised function must be deployed to the same NARATIVA Supabase project before that hardening is live.
+The callback handler consumes the OAuth state atomically, preventing two concurrent/replayed callbacks from both exchanging the same state. This hardening was deployed to the NARATIVA Supabase project as Edge Function version 3; verify the deployed function independently during release checks.
