@@ -189,6 +189,7 @@
       const { data: sessionData, error: sessionError } = await db.auth.getSession();
       if (sessionError) throw sessionError;
       signedInUser = sessionData.session?.user || null;
+      if (!signedInUser && status === 'published') throw new Error('Masuk ke akun terlebih dahulu sebelum menerbitkan karya.');
       if (!signedInUser) {
         const local = draftList();
         const item = { title, body, mode, format:$('workFormat').value, visibility:$('workVisibility').value, updatedAt:new Date().toISOString(), rightsOwner:$('rightsOwner').value.trim(), license:$('rightsLicense').value, aiPermission:$('aiPermission').checked };
@@ -262,6 +263,9 @@
       } catch (e) { setNotice('Pipeline gagal: ' + (e.message || 'periksa koneksi dan sesi akun.'), 'error'); }
       finally { button.disabled = false; button.textContent = 'Susun storyboard'; }
     }
+    $('workText').addEventListener('input', () => { lastStoryboard = null; });
+    $('workTitle').addEventListener('input', () => { lastStoryboard = null; });
+    $('workFormat').addEventListener('change', () => { lastStoryboard = null; });
     $('makeOutline').addEventListener('click', outline);
     $('newComic').addEventListener('click', () => { activeBookId = null; lastStoryboard = null; setMode('comic'); $('workTitle').value = 'Komik baru'; $('workText').value = ''; $('workFormat').value = 'comic'; $('create').scrollIntoView({behavior:'smooth'}); $('workText').focus(); });
     $('newWriting').addEventListener('click', () => { activeBookId = null; lastStoryboard = null; setMode('writing'); $('workTitle').value = 'Naskah baru'; $('workText').value = ''; $('workFormat').value = 'writing'; $('create').scrollIntoView({behavior:'smooth'}); $('workText').focus(); });
