@@ -60,9 +60,28 @@
       const email = $("authEmail").value.trim(), password = $("authPassword").value;
       if (!email || !password) throw new Error("Isi email dan kata sandi.");
       const { error } = await client.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) {
+        if (error.code === "email_not_confirmed" || /email not confirmed/i.test(error.message || "")) {
+          note("Email belum dikonfirmasi. Buka tautan di email pendaftaran atau pilih “Kirim ulang email konfirmasi”. Periksa folder Spam jika belum terlihat.", "error");
+          return;
+        }
+        throw error;
+      }
       await updateAuth();
     } catch (e) { note(e.message || "Gagal masuk.", "error"); }
+  });
+  $("resendConfirmationBtn").addEventListener("click", async () => {
+    try {
+      const email = $("authEmail").value.trim();
+      if (!email) throw new Error("Masukkan alamat email terlebih dahulu.");
+      const { error } = await client.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: "https://yudi8377.github.io/NARATIVA/#collective" }
+      });
+      if (error) throw error;
+      note("Jika alamat tersebut memiliki pendaftaran yang menunggu konfirmasi, email konfirmasi telah diminta. Periksa Kotak Masuk dan Spam.", "success");
+    } catch (e) { note(e.message || "Email konfirmasi belum dapat dikirim ulang.", "error"); }
   });
   $("signUpBtn").addEventListener("click", async () => {
     try {
