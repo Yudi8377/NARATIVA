@@ -39,3 +39,25 @@
 .x-wizard-result{margin-top:18px;padding:14px;border:1px solid var(--line,#dce2e8);border-radius:12px}
 .x-wizard-result h3{margin:0 0 8px}
 @media(max-width:650px){.x-word-toolbar{gap:6px;padding:7px}.x-toolbar-group{border-right:0;padding-right:0}.x-tool{min-height:34px;padding:6px 8px}.x-tool-wizard span{display:inline}.x-wizard-fields{grid-template-columns:1fr}.x-wizard-backdrop{padding:8px}.x-wizard-card{max-height:96vh;padding:16px}.x-editor-status{font-size:11px}}
+
+
+/* Vendor connector directory */
+.x-vendor-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px 14px;align-items:center;margin:0 0 20px}
+.x-vendor-tools label{grid-column:1/-1;color:#b8c3ce;font-size:11px}
+.x-vendor-tools input{max-width:560px}
+.x-vendor-tools span{font-size:10px;color:var(--x-mint)}
+.x-vendor-groups{display:grid;gap:25px}
+.x-vendor-group>h3{font:500 19px 'Playfair Display',serif;margin:0 0 12px;color:var(--x-gold)}
+.x-vendor-group>h3 small{font:10px 'DM Mono',monospace;color:#8795a3;margin-left:7px}
+.x-vendor[hidden]{display:none!important}
+.x-vendor{grid-template-rows:auto auto}
+.x-vendor p{line-height:1.6}
+.x-etsy-guide{margin-top:25px;padding:clamp(16px,3vw,25px);border:1px solid #8d754b77;border-radius:12px;background:linear-gradient(135deg,#201f1b,#171d24)}
+.x-etsy-guide h3{font:500 24px 'Playfair Display',serif;margin:0 0 9px}
+.x-etsy-guide ol{padding-left:22px;display:grid;gap:11px;color:#aeb9c4;font-size:12px;line-height:1.8}
+.x-etsy-guide li strong{color:#e4e9ee}
+.x-etsy-links{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.x-etsy-links a{display:inline-flex;border:1px solid #bba06d66;border-radius:7px;padding:9px 11px;color:var(--x-gold);font-size:11px}
+.x-etsy-warning{border-top:1px solid #ffffff18;padding-top:14px;color:#aeb9c4;font-size:11px;line-height:1.8}
+.x-etsy-warning strong{color:var(--x-gold)}
+@media(max-width:650px){.x-vendor-tools{grid-template-columns:1fr}.x-vendor-tools span{grid-column:1}.x-vendor-group>h3{font-size:17px}.x-etsy-guide h3{font-size:21px}}
