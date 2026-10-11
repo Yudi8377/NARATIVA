@@ -295,7 +295,7 @@
       if (!db || !signedInUser || !activeBookId) {
         const p = document.createElement('p'); p.className = 'x-muted'; p.textContent = 'Simpan atau buka karya untuk melihat aset cloud.'; box.appendChild(p); return;
       }
-      const { data, error } = await db.from('book_assets').select('id,asset_type,alt_text,metadata,created_at').eq('book_id',activeBookId).order('created_at',{ascending:false}).limit(100);
+      const { data, error } = await db.from('book_assets').select('id,asset_type,asset_url,alt_text,metadata,created_at').eq('book_id',activeBookId).order('created_at',{ascending:false}).limit(100);
       if (error) throw error;
       if (!data?.length) {
         const p = document.createElement('p'); p.className = 'x-muted'; p.textContent = 'Belum ada aset cloud untuk karya ini.'; box.appendChild(p); return;
@@ -304,7 +304,21 @@
         const card = document.createElement('div'); card.className = 'x-asset-item';
         const name = document.createElement('strong'); name.textContent = asset.alt_text || asset.metadata?.original_name || 'Aset kreatif';
         const meta = document.createElement('div'); meta.textContent = (asset.asset_type || 'other') + ' · ' + Math.max(1,Math.round(Number(asset.metadata?.size_bytes || 0)/1024)) + ' KB · privat';
-        card.append(name,meta); box.appendChild(card);
+        const linkButton = document.createElement('button'); linkButton.type = 'button'; linkButton.className = 'x-button x-secondary'; linkButton.textContent = 'Buat tautan buka sementara';
+        linkButton.addEventListener('click', async () => {
+          linkButton.disabled = true; linkButton.textContent = 'Menyiapkan tautan…';
+          try {
+            const bucket = asset.metadata?.storage_bucket || 'narativa-assets';
+            const { data: signed, error: signedError } = await db.storage.from(bucket).createSignedUrl(asset.asset_url, 60);
+            if (signedError) throw signedError;
+            const link = document.createElement('a'); link.href = signed.signedUrl; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = 'Buka / unduh (tautan berlaku 60 detik)';
+            linkButton.replaceWith(link);
+          } catch (e) {
+            setNotice('Tautan aset belum dapat dibuat: ' + (e.message || 'periksa sesi dan izin akses.'), 'error');
+            linkButton.disabled = false; linkButton.textContent = 'Coba buat tautan lagi';
+          }
+        });
+        card.append(name,meta,linkButton); box.appendChild(card);
       });
     }
     $('uploadAssets').addEventListener('click', async () => {
