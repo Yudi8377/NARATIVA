@@ -63,3 +63,15 @@
 @media(max-width:650px){.x-vendor-tools{grid-template-columns:1fr}.x-vendor-tools span{grid-column:1}.x-vendor-group>h3{font-size:17px}.x-etsy-guide h3{font-size:21px}}
 
 .x-etsy-links #etsyConnectionStatus{display:inline-flex;align-items:center;max-width:100%;font-size:10px;line-height:1.6;color:#b8c3ce}.x-etsy-links #etsyConnectButton:disabled{opacity:.65;cursor:wait}
+
+
+/* Connector Manager: setup guidance for every vendor */
+.x-connector-info { min-width: 0; width: 100%; }
+.x-connector-state { display: inline-block; margin: .35rem 0 .55rem; font-weight: 650; }
+.x-connector-setup { margin: .5rem 0; padding: .7rem .85rem; border: 1px solid var(--line, rgba(255,255,255,.14)); border-radius: .65rem; }
+.x-connector-setup summary { cursor: pointer; font-weight: 650; }
+.x-connector-setup strong { display: block; margin-top: .75rem; }
+.x-connector-setup ul, .x-connector-setup ol { padding-left: 1.35rem; margin: .4rem 0; }
+.x-connector-setup li { margin: .3rem 0; line-height: 1.5; }
+.x-connector-doc { display: inline-block; margin-top: .35rem; font-weight: 650; }
+#vendorResults { margin: .5rem 0 1rem; }
