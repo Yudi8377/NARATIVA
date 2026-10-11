@@ -149,6 +149,7 @@
             if (error) throw error;
             const content = data?.[0]?.canonical_content || {};
             activeBookId = book.id;
+            loadAssetsForBook().catch(e => setNotice('Karya dibuka, tetapi daftar aset belum termuat: ' + e.message, 'error'));
             $('workTitle').value = book.title;
             $('workText').value = content.body || book.description || '';
             setMode(content.mode || (book.content_type === 'comic' ? 'comic' : 'writing'));
@@ -282,6 +283,25 @@
       });
       const note = document.createElement('p'); note.className = 'x-muted'; note.textContent = files.length > 12 ? 'Menampilkan 12 dari ' + files.length + ' berkas. Berkas tidak diunggah.' : 'Berkas hanya dibaca oleh browser ini; tidak dikirim ke server.'; box.appendChild(note);
     });
+    async function loadAssetsForBook() {
+      const box = $('assetPreview');
+      if (!box) return;
+      box.replaceChildren();
+      if (!db || !signedInUser || !activeBookId) {
+        const p = document.createElement('p'); p.className = 'x-muted'; p.textContent = 'Simpan atau buka karya untuk melihat aset cloud.'; box.appendChild(p); return;
+      }
+      const { data, error } = await db.from('book_assets').select('id,asset_type,alt_text,metadata,created_at').eq('book_id',activeBookId).order('created_at',{ascending:false}).limit(100);
+      if (error) throw error;
+      if (!data?.length) {
+        const p = document.createElement('p'); p.className = 'x-muted'; p.textContent = 'Belum ada aset cloud untuk karya ini.'; box.appendChild(p); return;
+      }
+      data.forEach(asset => {
+        const card = document.createElement('div'); card.className = 'x-asset-item';
+        const name = document.createElement('strong'); name.textContent = asset.alt_text || asset.metadata?.original_name || 'Aset kreatif';
+        const meta = document.createElement('div'); meta.textContent = (asset.asset_type || 'other') + ' · ' + Math.max(1,Math.round(Number(asset.metadata?.size_bytes || 0)/1024)) + ' KB · privat';
+        card.append(name,meta); box.appendChild(card);
+      });
+    }
     $('uploadAssets').addEventListener('click', async () => {
       const files = Array.from($('assetUpload').files || []);
       if (!files.length) { setNotice('Pilih satu atau beberapa aset terlebih dahulu.', 'error'); return; }
@@ -313,6 +333,7 @@
         $('assetUpload').value = '';
         $('assetPreview').replaceChildren();
         const done = document.createElement('p'); done.className = 'x-muted'; done.textContent = uploaded + ' aset berhasil diunggah dan dicatat sebagai aset privat karya ini.'; $('assetPreview').appendChild(done);
+        await loadAssetsForBook();
         setNotice('Upload selesai. Berkas tersimpan pada bucket privat dan memiliki metadata hak/provenance.', 'success');
       } catch (e) {
         setNotice('Upload terhenti setelah ' + uploaded + ' aset: ' + (e.message || 'periksa izin, tipe berkas, dan koneksi.'), 'error');
