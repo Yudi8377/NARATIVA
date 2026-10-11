@@ -43,11 +43,11 @@
       const {data,error} = await db.functions.invoke('etsy-connect',{body:{action:'status'}});
       if (error) throw error;
       if (data?.status === 'connected') {
-        $('etsyState').textContent = 'Terhubung · status backend';
+        $('etsyState').textContent = 'OAuth aktif · status backend';
         $('etsyDetail').textContent = 'Backend melaporkan koneksi aktif. Verifikasi endpoint toko/listing masih merupakan gerbang terpisah sebelum operasi listing dianggap siap.';
         $('connectedCount').textContent = '1';
         $('connectEtsy').textContent = 'Periksa koneksi';
-        notice('Status OAuth aktif pada backend. Operasi listing/pesanan belum otomatis aktif.', 'success');
+        notice('Backend melaporkan token OAuth aktif. Akses Etsy ke toko/listing belum diuji melalui panggilan API; operasi listing/pesanan belum aktif.', 'success');
       } else if (data?.status === 'action_required') {
         $('etsyState').textContent = 'Perlu tindakan · otorisasi ulang';
         $('etsyDetail').textContent = 'Koneksi tidak siap digunakan. Mulai OAuth kembali setelah akses aplikasi disetujui.';
