@@ -7,11 +7,13 @@
 - Latest Hatchable deployment: **v5 — deployed**
 - Hatchable visibility: **Personal / private**; anonymous visitors still see the platform sign-in wall. This owner-only setting must be changed in Hatchable Settings if that host is the public production origin.
 - Public source repository: https://github.com/Yudi8377/NARATIVA
-- GitHub Pages workflow: [pages.yml](https://github.com/Yudi8377/NARATIVA/blob/main/.github/workflows/pages.yml). Do not treat Pages as live until its workflow succeeds and the URL is checked anonymously.
+- **Public website:** https://yudi8377.github.io/NARATIVA/ — GitHub Pages workflow completed successfully; anonymous smoke tests returned HTTP 200 for the homepage, all four user spaces, and shared CSS/JS assets.
 - Supabase project: `hdsqwkydgruyfbqqwhdk`.
 - Collective backend: `collective-orchestrator` Edge Function v1, JWT verification enabled.
 - Hatchable v5 dry run: passed with no errors or warnings.
-- Static page smoke test: all new pages returned HTTP 200 using Hatchable's temporary visitor preview token; the base origin itself still returns the private-host sign-in wall.
+- Hatchable preview smoke test: all new pages returned HTTP 200 through the temporary visitor preview; Hatchable's base origin still returns a sign-in wall because visibility remains private.
+- GitHub Pages live-origin smoke test: `/`, `/spaces.html`, `/reader.html`, `/creator.html`, `/commerce.html`, `/admin.html`, `/experience.css`, `/experiences.js`, `/collective.css`, `/collective.js`, and `/vendor/supabase.js` returned HTTP 200.
+- `robots.txt` and `sitemap.xml` are published; the admin shell is excluded from the sitemap and disallowed for crawlers.
 - JavaScript syntax checks: `public/app.js`, `public/collective.js`, and `public/experiences.js` parsed successfully in the project runtime.
 
 ## Adaptive experience pages shipped in v5
@@ -27,8 +29,8 @@
 
 ## Owner actions required for a public production launch
 
-1. **Choose the public origin.** Either change Hatchable visibility to Public in [Hatchable Settings](https://hatchable.com/console/projects/narativa-one-story), or verify the [GitHub Pages workflow](https://github.com/Yudi8377/NARATIVA/actions/workflows/pages.yml) succeeds and use the Pages URL reported by the deployment. The hosting agent cannot flip Hatchable's private visibility.
-2. In Supabase Dashboard → Authentication → URL Configuration, set the production **Site URL** and add the exact production origin to **Redirect URLs**. Include only the origin actually used for sign-in.
+1. **Public origin is GitHub Pages:** https://yudi8377.github.io/NARATIVA/. The Hatchable host remains private; change visibility to Public in [Hatchable Settings](https://hatchable.com/console/projects/narativa-one-story) only if that host is also intended to be public.
+2. In [Supabase Authentication URL Configuration](https://supabase.com/dashboard/project/hdsqwkydgruyfbqqwhdk/auth/url-configuration), set Site URL to `https://yudi8377.github.io/NARATIVA/` and add `https://yudi8377.github.io/NARATIVA/**` to Redirect URLs. This owner-side setting has not been changed or verified by this deployment.
 3. Verify email confirmation settings and sender deliverability.
 4. Before accepting shared knowledge/skills at scale, create an owner-controlled moderator identity and review process.
 5. Before enabling Admin Console actions, implement and test server-side admin role provisioning, permission checks, audit records, and protected API routes.
