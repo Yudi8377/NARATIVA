@@ -135,6 +135,54 @@
   $('refreshStatuses').addEventListener('click', refresh);
   $('vendorFilter').addEventListener('input', renderRegister);
   renderRegister();
-  db?.auth.onAuthStateChange(() => refresh());
+  async function refreshWoo() {
+    const state=$('wooState'), account=$('wooAccount'), noticeEl=$('wooNotice');
+    if(!db) { state.textContent='Backend belum siap'; noticeEl.textContent='Library Supabase belum termuat.'; return; }
+    try {
+      const {data:sessionData}=await db.auth.getSession();
+      if(!sessionData.session?.user) { state.textContent='Belum masuk'; account.textContent=''; noticeEl.textContent='Masuk ke akun NARATIVA untuk memeriksa koneksi privat.'; return; }
+      const {data,error}=await db.functions.invoke('woocommerce-connect',{body:{action:'status'}});
+      if(error) throw error;
+      if(data?.status==='connected') {
+        state.textContent='Terverifikasi · katalog read-only'; account.textContent='— '+(data.account_label||'toko');
+        noticeEl.textContent='Endpoint produk berhasil diuji '+(data.last_verified_at?'pada '+new Date(data.last_verified_at).toLocaleString('id-ID'):'')+'. Kapabilitas aktif: baca katalog. Operasi tulis tidak aktif.';
+      } else if(data?.status==='action_required') {
+        state.textContent='Perlu tindakan'; account.textContent='— '+(data.account_label||'toko');
+        noticeEl.textContent='Verifikasi gagal ('+(data.error||'unknown')+'). Periksa HTTPS, URL REST API, dan key Read-only di pengaturan WooCommerce.';
+      } else { state.textContent='Belum terhubung'; account.textContent=''; noticeEl.textContent='Masukkan URL toko dan key REST API Read-only untuk memulai verifikasi.'; }
+    } catch(e) { state.textContent='Belum dapat diverifikasi'; noticeEl.textContent='Pemeriksaan gagal. Pastikan fungsi backend dan secret CONNECTOR_TOKEN_ENCRYPTION_KEY telah dikonfigurasi.'; }
+  }
+  $('wooConnectForm').addEventListener('submit',async event=>{
+    event.preventDefault();
+    const button=$('saveWoo'); button.disabled=true; button.textContent='Menguji endpoint…';
+    $('wooNotice').textContent='Kredensial dikirim ke backend melalui HTTPS untuk uji read-only. Tunggu hasilnya.';
+    try {
+      const {data,error}=await db.functions.invoke('woocommerce-connect',{body:{action:'configure',store_url:$('wooStoreUrl').value.trim(),consumer_key:$('wooConsumerKey').value.trim(),consumer_secret:$('wooConsumerSecret').value.trim()}});
+      if(error) throw error;
+      if(data?.status!=='connected') throw new Error(data?.error||'verification_failed');
+      $('wooConsumerKey').value=''; $('wooConsumerSecret').value='';
+      $('wooState').textContent='Terverifikasi · katalog read-only'; $('wooAccount').textContent='— '+data.account_label;
+      $('wooNotice').textContent='Berhasil. Endpoint produk diuji dan kredensial tersimpan terenkripsi di backend. Produk sampel yang dikembalikan: '+data.sample_count+'. Tidak ada data produk yang disimpan.';
+    } catch(e) {
+      const msg=String(e?.message||'').toLowerCase();
+      const map=msg.includes('connector_encryption')?'Secret CONNECTOR_TOKEN_ENCRYPTION_KEY belum valid/tersedia di Supabase.':msg.includes('credentials_rejected')?'WooCommerce menolak key. Pastikan key benar dan memiliki izin Read.':msg.includes('store_url')||msg.includes('store_host')?'URL harus berupa origin HTTPS publik yang valid, tanpa path, query, atau kredensial.':msg.includes('provider_unreachable')?'Toko tidak dapat dijangkau dari backend atau waktu koneksi habis.':'Konfigurasi belum berhasil. Periksa URL HTTPS, REST API, key Read-only, dan secret backend.';
+      $('wooNotice').textContent=map; $('wooState').textContent='Belum terverifikasi';
+    } finally { button.disabled=false; button.textContent='Simpan aman & uji endpoint'; await refreshWoo(); }
+  });
+  $('refreshWoo').addEventListener('click',refreshWoo);
+  $('disconnectWoo').addEventListener('click',async()=>{
+    if(!db) return;
+    $('disconnectWoo').disabled=true;
+    try {
+      const {data,error}=await db.functions.invoke('woocommerce-connect',{body:{action:'disconnect'}});
+      if(error) throw error;
+      $('wooState').textContent='Terputus'; $('wooAccount').textContent='';
+      $('wooNotice').textContent='Kredensial konektor WooCommerce telah dihapus dari penyimpanan NARATIVA.';
+      $('wooConsumerKey').value=''; $('wooConsumerSecret').value='';
+    } catch(e) { $('wooNotice').textContent='Pemutusan gagal. Coba periksa status backend dan ulangi.'; }
+    finally { $('disconnectWoo').disabled=false; }
+  });
+  db?.auth.onAuthStateChange(() => { refresh(); refreshWoo(); });
   refresh();
+  refreshWoo();
 })();
