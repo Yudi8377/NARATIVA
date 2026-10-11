@@ -1,39 +1,53 @@
 # NARATIVA — One Story, Many Worlds
 
-NARATIVA is a story-universe platform built around a Living Library and a Story Universe Engine. A canonical story can be adapted into multiple formats while preserving rights, provenance, continuity, accessibility, and editorial review.
+NARATIVA is a creative-work universe: one creator identity and canonical asset catalog can support stories, comics, photography, illustration, audio, video, 3D/spatial work, and digital licensing or sales—while preserving rights, provenance, continuity, accessibility, and editorial review.
 
 ## Product principles
 
+- **Experience per role:** readers, creators, publishers/sellers, and platform operators get different workflows.
 - **Canon first:** adaptations reference approved manuscripts, universe facts, and source material.
 - **Human review:** AI-assisted output remains a draft until reviewed and approved.
 - **Rights and provenance:** track source, permission/license, contributor, derivative lineage, and publication status.
 - **Privacy and safety:** private assets by default, role-based access, child-safety safeguards, and data minimization.
-- **Provider adapters:** keep AI vendors replaceable; keep credentials server-side.
+- **Provider adapters:** keep AI and commerce vendors replaceable; keep credentials server-side.
 - **Cost controls:** asynchronous jobs, quotas, retries, cancellation, and usage tracking for expensive media generation.
 
 ## Current release
 
-- Hosted preview: https://narativa-one-story.hatchable.site
-- Hosting deployment: v4 live; project visibility remains private until the owner changes it in [Hatchable Settings](https://hatchable.com/console/projects/narativa-one-story).
-- Backend: Supabase project `hdsqwkydgruyfbqqwhdk`, active and healthy.
+- Hatchable deployment: [NARATIVA v5](https://narativa-one-story.hatchable.site), deployed with the adaptive experience pages. **Hatchable visibility is still Personal/Private**, so anonymous visitors still encounter its sign-in wall until the owner changes that setting.
+- Public source repository: [Yudi8377/NARATIVA](https://github.com/Yudi8377/NARATIVA).
+- Static site deployment workflow: [GitHub Actions Pages workflow](https://github.com/Yudi8377/NARATIVA/actions/workflows/pages.yml). The GitHub Pages URL must be confirmed by a successful workflow run before it is advertised as live.
+- Backend: Supabase project `hdsqwkydgruyfbqqwhdk`.
 - Collective Intelligence endpoint: `collective-orchestrator` v1 with JWT verification.
-- Last hosting dry-run: no errors or warnings.
-- The current Hatchable release includes a Collective AI workspace for account authentication, personal agent registration, private task creation, knowledge/skill submissions, and verified-only discovery.
+- The Creator Studio scene planner and new role-specific local workspaces are prototypes; local drafts/catalogs remain in the browser and are not cloud-synced.
+
+## Adaptive experiences
+
+- `website/index.html` — public NARATIVA website and concept.
+- `website/spaces.html` — experience router / choose a workspace.
+- `website/reader.html` — reader discovery, filters, reading preview, and local saved list.
+- `website/creator.html` — writing/comic workspace, local drafts, asset preview, and rights fields.
+- `website/commerce.html` — local product catalog and vendor connector readiness status.
+- `website/admin.html` — admin-console shell and governance checklist. Privileged actions are intentionally disabled until server-side role enforcement exists.
+- `website/experience.css` and `website/experiences.js` — shared responsive visual system and interactions for the role-specific spaces.
+
+See [Adaptive Experiences Architecture](docs/ADAPTIVE-EXPERIENCES.md) for the UI contracts and explicit release limitations.
 
 ## Collective Intelligence foundation
 
 See [Collective Intelligence Engineering Blueprint](docs/COLLECTIVE-INTELLIGENCE.md) for the tables, endpoint, privacy boundaries, and phased next steps.
 
-The collective backend currently **stores tasks but does not execute autonomous agents**. Shared knowledge/skills require review before discovery. The Creator Studio scene planner remains a deterministic browser-side prototype, not an LLM-driven production pipeline.
+The collective backend currently **stores tasks but does not execute autonomous agents**. Shared knowledge/skills require review before discovery.
 
 ## Roadmap
 
 1. **P0 — Foundation and security:** schema, RLS, reviewer workflow, private asset storage, and access tests.
-2. **P1 — Living Library and Story Universe:** catalog, manuscript versions, canon, rights, and source provenance.
-3. **P2 — Creator Studio and Living Comics:** storyboard/panel editor, motion direction, dialogue, and audio plan.
-4. **P3 — AI video/audio adapters:** provider abstraction, job queue, budgets, retries, cancellation, and status tracking.
-5. **P4 — Companion, Mentor, and Knowledge Fabric:** grounded retrieval with citations and canon-aware responses.
-6. **P5 — Living Page and XR:** expand into immersive formats after the core pipeline is reliable.
+2. **P1 — Adaptive experiences and Living Library:** catalog, manuscript versions, canon, rights, provenance, reader and creator journeys.
+3. **P2 — Universal Creative Asset Engine:** images, documents, audio/video, and 3D/spatial metadata and storage.
+4. **P3 — Creator Studio and Living Comics:** storyboard/panel editor, motion direction, dialogue, and audio plan.
+5. **P4 — Commerce connectors:** official vendor APIs, OAuth, webhook sync, listing status, and revenue reconciliation where supported.
+6. **P5 — AI media adapters and Knowledge Fabric:** provider abstraction, job queue, budgets, retries, cancellation, grounded retrieval, and canon-aware assistance.
+7. **P6 — Living Page and XR:** expand into immersive formats after the core pipeline is reliable.
 
 ## Security status
 
@@ -41,8 +55,11 @@ The collective backend currently **stores tasks but does not execute autonomous 
 - Collective tasks and agents are owner-scoped.
 - Shared knowledge and skills are discoverable only after verification.
 - Service-role and provider secrets must never be placed in browser code.
-- Before production scale, add a moderator role, server-side review actions, access tests, rate limits, retention/deletion controls, cost alerts, and child privacy/consent protections.
+- Reader bookmarks, Creator Studio drafts, and Commerce Center catalog entries in this release are **local browser data**, not backed up or synchronized.
+- Admin UI is a shell only; there is no admin role provisioning or privileged operation API yet.
+- Commerce vendor cards are readiness indicators, not active connections. No listing or transaction is created by this release.
+- Before production scale, add moderator roles, server-side approval, access tests, rate limits, retention/deletion controls, cost alerts, and child privacy/consent protections.
 
 ## Deployment
 
-See [Go-Live Checklist](docs/DEPLOYMENT.md) for the remaining owner-only public visibility step, Supabase Auth URL configuration, and smoke tests.
+See [Go-Live Checklist](docs/DEPLOYMENT.md) for deployment status, public visibility, Supabase Auth URL configuration, and smoke tests.
