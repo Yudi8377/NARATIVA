@@ -266,6 +266,9 @@
     if(localX > rect.width-size && localY > rect.height-size && current < pages.length-1) return {side:'right',bottom:true};
     if(localX < size && localY < size && current > 0) return {side:'left',bottom:false};
     if(localX < size && localY > rect.height-size && current > 0) return {side:'left',bottom:true};
+    // The lower edge itself is draggable, not just its two corners.
+    if(localY > rect.height-size && localX >= rect.width*.5 && current < pages.length-1) return {side:'right',bottom:true};
+    if(localY > rect.height-size && localX < rect.width*.5 && current > 0) return {side:'left',bottom:true};
     return null;
   }
   bookFrame.addEventListener('pointermove', event => {
@@ -296,7 +299,8 @@
     const moved=Math.hypot(dx,dy);
     clearCurl();
     // Drag the right corner inward to go forward; drag the left corner inward to go back.
-    if(moved>24 && ((gesture.side==='right' && dx < -18) || (gesture.side==='left' && dx > 18))) {
+    const pulledInward = gesture.bottom ? dy < -18 : (gesture.side==='right' ? dx < -18 : dx > 18);
+    if(moved>24 && pulledInward) {
       goTo(current+(gesture.side==='right'?1:-1));
     } else if(moved<10 && gesture.side==='right') {
       goTo(current+1);
