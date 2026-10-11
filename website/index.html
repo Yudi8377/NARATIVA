@@ -7,15 +7,18 @@
   <meta name="description" content="NARATIVA — One Story, Many Worlds. Living Library dan Story Universe Engine untuk mengembangkan cerita ke buku, komik hidup, audio, video, dan pengalaman belajar.">
   <title>NARATIVA — One Story, Many Worlds</title>
   <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="collective.css">
+  <script defer src="vendor/supabase.js"></script>
   <script defer src="app.js"></script>
+  <script defer src="collective.js"></script>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="#home" aria-label="NARATIVA home"><span class="brand-mark">N</span><span>NARATIVA<small>ONE STORY, MANY WORLDS</small></span></a>
     <button class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-expanded="false">☰</button>
     <nav id="nav">
-      <a href="#universe">Story Universe</a><a href="#studio">Creator Studio</a><a href="#principles">Prinsip</a><a href="#roadmap">Roadmap</a>
-      <a class="nav-cta" href="#studio">Coba Studio <span>↗</span></a>
+      <a href="spaces.html">Ruang pengguna</a><a href="#universe">Story Universe</a><a href="#studio">Creator Studio</a><a href="#collective">Collective AI</a><a href="#principles">Prinsip</a><a href="#roadmap">Roadmap</a>
+      <a class="nav-cta" href="spaces.html">Pilih ruang <span>↗</span></a>
     </nav>
   </header>
   <main>
@@ -53,6 +56,75 @@
         <button class="button primary generate-btn" id="generateBtn">Susun draft adegan <span>✦</span></button>
         <p class="form-note" id="formNote">Pemrosesan berjalan di browser ini. Naskah tidak dikirim ke server.</p>
         <div id="results" class="results" hidden aria-live="polite"></div>
+      </div>
+    </div></section>
+    <section class="collective-section" id="collective"><div class="wrap">
+      <div class="eyebrow">NARATIVA COLLECTIVE INTELLIGENCE / FOUNDATION</div>
+      <div class="section-head"><div><h2>Setiap AI punya peran.<br><em>Pengetahuan tumbuh bersama.</em></h2></div><p>Daftarkan agen personal, antrekan pekerjaan, dan ajukan pengetahuan atau kemampuan untuk ditinjau. Memori serta tugas tetap privat secara default.</p></div>
+      <p class="collective-intro">Jaringan ini memisahkan kepemilikan, delegasi, dan kontribusi bersama. Pengetahuan atau skill yang diajukan ke jaringan tidak langsung dipercaya atau ditampilkan kepada pengguna lain; kontribusi harus diverifikasi terlebih dahulu. Pada tahap ini, tugas masuk antrean—eksekusi agen otomatis dan pembelajaran model lintas pengguna belum diaktifkan.</p>
+      <div class="collective-pillars">
+        <article class="collective-pillar"><b>01 / Personal AI</b><p>Agen, tujuan, dan pekerjaan dikelola di ruang akun pemiliknya.</p></article>
+        <article class="collective-pillar"><b>02 / Skill Exchange</b><p>Workflow dan kemampuan memiliki versi, bukti, lisensi, dan status review.</p></article>
+        <article class="collective-pillar"><b>03 / Verified Knowledge</b><p>Hanya kontribusi bersama yang diverifikasi dapat ditemukan oleh anggota lain.</p></article>
+      </div>
+      <div class="collective-workspace">
+        <div class="panel-top"><div><span class="status-dot"></span> COLLECTIVE WORKSPACE <small>AUTHENTICATED / PRIVACY FIRST</small></div><span class="panel-icon">⌘</span></div>
+        <div class="collective-status" id="collectiveStatus" role="status" aria-live="polite">Memeriksa konfigurasi autentikasi...</div>
+        <div class="collective-auth" id="collectiveAuth">
+          <div><label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="nama@contoh.id"></div>
+          <div><label for="authPassword">Kata sandi (minimal 8 karakter)</label><input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Kata sandi"></div>
+          <div class="collective-actions"><button class="button primary" type="button" id="signInBtn">Masuk</button><button class="button secondary" type="button" id="signUpBtn">Buat akun</button></div>
+          <p>Autentikasi menggunakan Supabase. Jika konfirmasi email diaktifkan, periksa kotak masuk sebelum masuk. Jangan unggah naskah privat sebagai pengetahuan jaringan.</p>
+        </div>
+        <div id="collectiveWorkspace" hidden>
+          <div class="collective-userbar"><span>AKUN AKTIF · <strong id="collectiveUser"></strong></span><button class="button secondary" type="button" id="signOutBtn">Keluar</button></div>
+          <div class="collective-grid">
+            <form class="collective-form-card" id="taskForm">
+              <h3>Antrean tugas kolektif</h3><p>Tugas disimpan sebagai privat. Anggaran adalah batas unit internal, bukan tagihan uang.</p>
+              <label for="taskTitle">Judul tugas</label><input id="taskTitle" maxlength="180" required placeholder="Contoh: analisis kontinuitas cerita">
+              <label for="taskObjective">Tujuan dan konteks yang boleh diproses</label><textarea id="taskObjective" maxlength="12000" required placeholder="Jelaskan hasil yang diharapkan..."></textarea>
+              <label for="taskType">Jenis tugas</label><select id="taskType"><option value="story_analysis">Analisis cerita</option><option value="continuity">Kontinuitas</option><option value="research">Riset</option><option value="writing">Penulisan</option><option value="seo">SEO</option><option value="translation">Terjemahan</option><option value="audio_plan">Rencana audio</option><option value="other">Lainnya</option></select>
+              <div class="panel-options"><div><label for="maxAgents">Maksimum agen (1–10)</label><input id="maxAgents" type="number" min="1" max="10" value="3"></div><div><label for="budgetUnits">Budget unit (1–100)</label><input id="budgetUnits" type="number" min="1" max="100" value="10"></div></div>
+              <button class="button primary generate-btn" type="submit">Masukkan antrean ↗</button>
+              <div class="collective-actions"><button class="button secondary" type="button" id="refreshTasksBtn">Muat tugas saya</button></div>
+            </form>
+            <form class="collective-form-card" id="agentForm">
+              <h3>Daftarkan agen personal</h3><p>Registri agen menyimpan spesialisasi dan kapabilitas; pendaftaran tidak mengklaim agen sudah berjalan otomatis.</p>
+              <label for="agentName">Nama agen</label><input id="agentName" maxlength="100" required placeholder="Story Continuity Analyst">
+              <label for="agentSpecialty">Spesialisasi</label><select id="agentSpecialty"><option value="story-analysis">Analisis struktur cerita</option><option value="continuity">Kontinuitas karakter</option><option value="research">Riset dan sumber</option><option value="seo">SEO dan distribusi</option><option value="audio">Produksi audio</option><option value="translation">Bahasa dan terjemahan</option><option value="other">Lainnya</option></select>
+              <label for="agentDescription">Deskripsi</label><textarea id="agentDescription" maxlength="1200" placeholder="Peran, batasan, dan metode kerja"></textarea>
+              <label for="agentCapabilities">Kapabilitas (pisahkan dengan koma)</label><input id="agentCapabilities" placeholder="continuity-check, character-map">
+              <button class="button primary generate-btn" type="submit">Daftarkan agen ↗</button>
+              <div class="collective-actions"><button class="button secondary" type="button" id="refreshAgentsBtn">Muat agen saya</button></div>
+            </form>
+            <form class="collective-form-card" id="knowledgeForm">
+              <h3>Ajukan pengetahuan</h3><p>Kontribusi baru berstatus menunggu tinjauan. Jangan mengirim informasi pribadi atau materi tanpa hak yang sesuai.</p>
+              <label for="knowledgeTitle">Judul</label><input id="knowledgeTitle" maxlength="180" required placeholder="Praktik storyboard yang diuji">
+              <label for="knowledgeSummary">Ringkasan pengetahuan</label><textarea id="knowledgeSummary" maxlength="4000" required placeholder="Temuan, konteks, batas penerapan, dan hasil..."></textarea>
+              <label for="knowledgeDomain">Domain</label><input id="knowledgeDomain" maxlength="80" placeholder="storytelling">
+              <label for="knowledgeSource">URL sumber (opsional)</label><input id="knowledgeSource" type="url" maxlength="2000" placeholder="https://...">
+              <label class="collective-check"><input id="knowledgeShare" type="checkbox"> Ajukan untuk dibagikan ke jaringan (menunggu verifikasi)</label>
+              <button class="button primary generate-btn" type="submit">Simpan kontribusi ↗</button>
+            </form>
+            <form class="collective-form-card" id="skillForm">
+              <h3>Ajukan skill / workflow</h3><p>Deskripsikan kemampuan yang bisa diuji ulang. Skill jaringan tetap menunggu verifikasi.</p>
+              <label for="skillName">Nama skill</label><input id="skillName" maxlength="120" required placeholder="Continuity Check Workflow">
+              <label for="skillSlug">Slug unik</label><input id="skillSlug" maxlength="100" required pattern="[A-Za-z0-9-]+" placeholder="continuity-check-workflow">
+              <label for="skillVersion">Versi</label><input id="skillVersion" maxlength="32" value="1.0.0">
+              <label for="skillSummary">Ringkasan dan batas penggunaan</label><textarea id="skillSummary" maxlength="2000" required placeholder="Masukan, keluaran, batasan, dan cara mengukur kualitas..."></textarea>
+              <label for="skillInstructions">Instruksi workflow (opsional)</label><textarea id="skillInstructions" maxlength="4000" placeholder="Langkah-langkah workflow tanpa rahasia atau data privat"></textarea>
+              <label class="collective-check"><input id="skillShare" type="checkbox"> Ajukan ke katalog bersama (menunggu verifikasi)</label>
+              <button class="button primary generate-btn" type="submit">Simpan skill ↗</button>
+            </form>
+            <div class="collective-form-card">
+              <h3>Temukan pengetahuan dan skill</h3><p>Hanya item jaringan berstatus terverifikasi yang muncul di sini.</p>
+              <label for="discoverDomain">Filter domain (opsional)</label><input id="discoverDomain" maxlength="80" placeholder="storytelling">
+              <button class="button secondary generate-btn" type="button" id="discoverBtn">Cari katalog bersama ↗</button>
+              <div class="collective-actions"><button class="button secondary" type="button" id="viewTasksBtn">Tampilkan tugas</button><button class="button secondary" type="button" id="viewAgentsBtn">Tampilkan agen</button></div>
+            </div>
+          </div>
+          <div class="collective-output" id="collectiveOutput" aria-live="polite"></div>
+        </div>
       </div>
     </div></section>
     <section class="section wrap" id="principles"><div class="section-head"><div><div class="eyebrow">TRUST BUILT INTO THE STORY</div><h2>Kreativitas yang<br><em>punya landasan.</em></h2></div><p>AI membantu memperluas kemungkinan, tetapi tidak menggantikan kendali kreator. Sumber, hak, dan keputusan publikasi tetap jelas.</p></div>
