@@ -128,7 +128,7 @@
         const heading = document.createElement('h3'); heading.textContent = item.title;
         const description = document.createElement('p'); description.textContent = item.description;
         const author = document.createElement('small'); author.className = 'x-story-author'; author.textContent = item.author + ' · ' + item.genre;
-        const button = document.createElement('button'); button.type = 'button'; button.className = 'x-text-button'; button.dataset.read = item.id; button.textContent = 'Detail & baca ↗';
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'x-text-button'; button.dataset.read = item.id; button.textContent = item.contentUrl ? 'Baca di NARATIVA →' : 'Detail & sumber ↗';
         card.append(cover,meta,heading,description,author,button);
         grid.appendChild(card);
       });
@@ -172,6 +172,7 @@
     const typeFilter = $('readerTypeFilter');
     function filterStories() {
       const query = search.value.trim().toLocaleLowerCase('id');
+      let visibleCount = 0;
       document.querySelectorAll('.x-story-card').forEach(card => {
         const haystack = ((card.dataset.search || '') + ' ' + (card.dataset.title || '') + ' ' + (card.dataset.genre || '')).toLocaleLowerCase('id');
         const genres = (card.dataset.genre || '').split(' ');
@@ -180,7 +181,10 @@
         const typeMatch = type === 'all' || card.dataset.type === type || (type === 'cerpen' && card.dataset.type === 'antologi');
         const genreMatch = genreFilter.value === 'all' || tags.includes(genreFilter.value);
         card.hidden = !(haystack.includes(query) && (genre === 'all' || genres.includes(genre)) && genreMatch && typeMatch);
+        if (!card.hidden) visibleCount++;
       });
+      $('readerEmpty').hidden = visibleCount > 0;
+      $('catalogCount').textContent = visibleCount + ' karya ditampilkan dari katalog. Gunakan filter genre dan jenis untuk menemukan bacaan.';
     }
     search.addEventListener('input', filterStories);
     genreFilter.addEventListener('change', filterStories);
