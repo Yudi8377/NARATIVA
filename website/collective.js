@@ -68,7 +68,7 @@
     try {
       const email = $("authEmail").value.trim(), password = $("authPassword").value;
       if (!email || password.length < 8) throw new Error("Isi email dan kata sandi minimal 8 karakter.");
-      const { data, error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin + window.location.pathname + "#collective" } });
+      const { data, error } = await client.auth.signUp({ email, password, options: { emailRedirectTo: "https://yudi8377.github.io/NARATIVA/#collective" } });
       if (error) throw error;
       if (!data.session) note("Akun dibuat. Periksa email untuk konfirmasi, lalu masuk.", "success");
       else await updateAuth();
