@@ -283,31 +283,88 @@
   }
 
   if (page === 'commerce') {
-    const key = 'narativa-commerce-products';
-    const products = () => safeStore.get(key, []);
+    const db = window.supabase?.createClient?.('https://hdsqwkydgruyfbqqwhdk.supabase.co', 'sb_publishable_m24u_7V16Y-bq_B_YydL-w_dw_4bOb8');
+    let user = null;
+    let ownedBooks = [];
     const money = value => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(value || 0));
+    function commerceNote(message, kind) { $('vendorNotice').textContent = message; $('vendorNotice').dataset.kind = kind || 'info'; }
     function renderProducts() {
       const list = $('productList'); list.replaceChildren();
-      const data = products();
+      const data = ownedBooks.filter(book => book.metadata && book.metadata.commerce);
       $('commerceCount').textContent = String(data.length);
-      if (!data.length) { const empty = document.createElement('div'); empty.className = 'x-empty'; const strong = document.createElement('strong'); strong.textContent = 'Katalog masih kosong'; const p = document.createElement('p'); p.textContent = 'Tambahkan karya untuk menyiapkan metadata awal. Produk akan tersimpan di browser ini saja.'; empty.append(strong,p); list.appendChild(empty); return; }
-      data.forEach(item => { const row = document.createElement('article'); row.className = 'x-product-row'; const info = document.createElement('div'); const h = document.createElement('h3'); h.textContent = item.name; const p = document.createElement('p'); p.textContent = item.type + ' · ' + item.rights; info.append(h,p); const price = document.createElement('strong'); price.textContent = money(item.price); row.append(info,price); list.appendChild(row); });
+      if (!data.length) {
+        const empty = document.createElement('div'); empty.className = 'x-empty';
+        const strong = document.createElement('strong'); strong.textContent = 'Belum ada produk di katalog cloud';
+        const p = document.createElement('p'); p.textContent = user ? 'Pilih karya yang sudah tersimpan, lalu tambahkan metadata harga dan hak distribusinya.' : 'Masuk melalui halaman utama, lalu buat karya di Creator Studio untuk mengaktifkan katalog akun.';
+        empty.append(strong,p); list.appendChild(empty); return;
+      }
+      data.forEach(book => {
+        const product = book.metadata.commerce;
+        const row = document.createElement('article'); row.className = 'x-product-row';
+        const info = document.createElement('div');
+        const h = document.createElement('h3'); h.textContent = book.title;
+        const p = document.createElement('p'); p.textContent = (product.type || book.content_type || 'Karya') + ' · ' + (product.rights || 'Hak belum ditentukan') + ' · ' + book.status;
+        info.append(h,p);
+        const price = document.createElement('strong'); price.textContent = money(product.price_idr);
+        row.append(info,price); list.appendChild(row);
+      });
     }
-    $('addProduct').addEventListener('click', () => { $('productForm').hidden = !$('productForm').hidden; if (!$('productForm').hidden) $('productName').focus(); });
+    async function loadCommerceBooks() {
+      if (!db) { commerceNote('Library Supabase belum termuat. Muat ulang halaman.', 'error'); return; }
+      const { data: sessionData, error: sessionError } = await db.auth.getSession();
+      if (sessionError) { commerceNote('Sesi akun tidak dapat diperiksa: ' + sessionError.message, 'error'); return; }
+      user = sessionData.session?.user || null;
+      const select = $('productBook');
+      select.replaceChildren();
+      if (!user) {
+        const option = document.createElement('option'); option.value = ''; option.textContent = 'Masuk untuk memuat karya'; select.appendChild(option);
+        ownedBooks = []; renderProducts();
+        commerceNote('Katalog kini memakai data akun. Masuk di halaman utama → Collective AI, lalu buka Creator Studio.', 'info'); return;
+      }
+      const { data, error } = await db.from('books').select('id,title,slug,status,description,content_type,metadata').eq('owner_id',user.id).order('updated_at',{ascending:false}).limit(100);
+      if (error) { commerceNote('Karya akun gagal dimuat: ' + error.message, 'error'); return; }
+      ownedBooks = data || [];
+      const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = 'Pilih karya milik Anda'; select.appendChild(placeholder);
+      ownedBooks.forEach(book => { const option = document.createElement('option'); option.value = book.id; option.textContent = book.title + ' · ' + book.status; select.appendChild(option); });
+      renderProducts();
+      commerceNote('Katalog tersambung ke akun ' + (user.email || '') + '. Harga tersimpan sebagai metadata referensi; transaksi dan vendor belum terhubung.', 'success');
+    }
+    $('productBook').addEventListener('change', () => {
+      const book = ownedBooks.find(item => item.id === $('productBook').value);
+      $('productName').value = book?.title || '';
+      const product = book?.metadata?.commerce;
+      if (product) {
+        $('productType').value = product.type || $('productType').options[0].value;
+        $('productPrice').value = product.price_idr ?? '';
+        $('productRights').value = product.rights || $('productRights').options[0].value;
+      } else {
+        $('productPrice').value = '';
+      }
+    });
+    $('addProduct').addEventListener('click', () => {
+      $('productForm').hidden = !$('productForm').hidden;
+      if (!$('productForm').hidden) { $('productBook').focus(); loadCommerceBooks(); }
+    });
     $('cancelProduct').addEventListener('click', () => { $('productForm').reset(); $('productForm').hidden = true; });
-    $('productForm').addEventListener('submit', e => {
+    $('productForm').addEventListener('submit', async e => {
       e.preventDefault();
-      const name = $('productName').value.trim();
-      if (!name) return;
-      const data = products(); data.unshift({ name, type:$('productType').value, price:Number($('productPrice').value || 0), rights:$('productRights').value, createdAt:new Date().toISOString() });
-      if (!safeStore.set(key, data.slice(0,100))) { $('vendorNotice').textContent = 'Penyimpanan browser penuh; produk belum tersimpan.'; return; }
-      $('productForm').reset(); $('productForm').hidden = true; renderProducts();
-      $('vendorNotice').textContent = 'Produk ditambahkan ke katalog lokal. Belum ada listing vendor yang dibuat.';
+      try {
+        if (!db || !user) throw new Error('Masuk terlebih dahulu untuk menyimpan metadata produk.');
+        const book = ownedBooks.find(item => item.id === $('productBook').value);
+        if (!book) throw new Error('Pilih karya dari Creator Studio terlebih dahulu.');
+        const metadata = { ...(book.metadata || {}), commerce: { type:$('productType').value, price_idr:Number($('productPrice').value || 0), rights:$('productRights').value, updated_at:new Date().toISOString(), listing_status:'prepared' } };
+        const { error } = await db.from('books').update({ metadata }).eq('id',book.id).eq('owner_id',user.id);
+        if (error) throw error;
+        $('productForm').reset(); $('productForm').hidden = true;
+        await loadCommerceBooks();
+        commerceNote('Metadata katalog tersimpan di cloud. Belum ada listing vendor atau transaksi yang dibuat.', 'success');
+      } catch (e) { commerceNote('Katalog belum tersimpan: ' + (e.message || 'periksa sesi dan akses akun.'), 'error'); }
     });
     document.querySelectorAll('[data-vendor]').forEach(btn => btn.addEventListener('click', () => {
-      $('vendorNotice').textContent = btn.dataset.vendor + ': koneksi belum aktif. Integrasi memerlukan aplikasi vendor, OAuth/API resmi, kebijakan izin, serta penyimpanan token yang aman di server.';
+      commerceNote(btn.dataset.vendor + ': koneksi belum aktif. Integrasi memerlukan aplikasi vendor, OAuth/API resmi, kebijakan izin, serta penyimpanan token yang aman di server.');
       $('vendorNotice').scrollIntoView({behavior:'smooth',block:'nearest'});
     }));
-    renderProducts();
+    loadCommerceBooks();
+    db?.auth.onAuthStateChange(() => loadCommerceBooks());
   }
 })();
