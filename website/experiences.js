@@ -54,7 +54,10 @@
           try { popup.focus(); } catch (_) {}
           return;
         }
-        // If the browser blocks popups, keep the existing in-page reader as a usable fallback.
+        // If popups are blocked, still open the standalone comic reader in this tab
+        // instead of putting the comic back inside the catalogue module.
+        window.location.assign(popupUrl);
+        return;
       }
       const story = stories[active] || {title:item?.title || 'Karya NARATIVA',body:item?.description || 'Karya terbit dari katalog NARATIVA.'};
       $('readerTitle').textContent = story.title;
