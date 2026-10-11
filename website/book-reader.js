@@ -11,7 +11,7 @@
   };
   let work = catalog.find(item => item.id === workId);
   if (!work && demoStories[storyId]) work = demoStories[storyId];
-  const pageNode = $('bookPage'), turnLayer = $('turnLayer');
+  const pageNode = $('bookPage'), turnLayer = $('turnLayer'), curlLayer = $('pageCurl'), bookFrame = $('bookFrame');
   const prevButtons = [$('previous'), $('previousBottom')], nextButtons = [$('next'), $('nextBottom')];
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let pages = [], current = 0, turning = false, contentPages = [], downloadedPage = '';
@@ -215,5 +215,84 @@
   let touchStart=null;
   $('bookFrame').addEventListener('touchstart',event=>{touchStart=event.changedTouches[0].clientX;},{passive:true});
   $('bookFrame').addEventListener('touchend',event=>{if(touchStart===null)return;const dx=event.changedTouches[0].clientX-touchStart;if(Math.abs(dx)>55)goTo(current+(dx<0?1:-1));touchStart=null;},{passive:true});
+  // Corner drag/curl: hover near a corner to lift paper, drag inward to turn it.
+  let curlGesture = null;
+  const cornerSize = () => Math.max(54, Math.min(100, bookFrame.clientWidth * .16));
+  function clearCurl() {
+    curlGesture = null;
+    bookFrame.classList.remove('is-curling','is-dragging');
+    curlLayer.className = 'page-curl';
+    curlLayer.style.clipPath = 'polygon(100% 0,100% 0,100% 0)';
+    curlLayer.style.opacity = '0';
+  }
+  function paintCurl(x, y, side, bottom, dragging) {
+    const rect = bookFrame.getBoundingClientRect();
+    const px = Math.max(0,Math.min(100,(x-rect.left)/rect.width*100));
+    const py = Math.max(0,Math.min(100,(y-rect.top)/rect.height*100));
+    const cornerX = side === 'right' ? 100 : 0;
+    const cornerY = bottom ? 100 : 0;
+    const edgeX = side === 'right' ? 100 : 0;
+    const edgeY = bottom ? Math.max(0,py-9) : Math.min(100,py+9);
+    const edgeX2 = side === 'right' ? Math.min(100,px+10) : Math.max(0,px-10);
+    curlLayer.className = 'page-curl is-visible' + (side==='left'?' is-left':'') + (bottom?' is-bottom':'');
+    curlLayer.style.clipPath = `polygon(${cornerX}% ${cornerY}%, ${edgeX}% ${edgeY}%, ${px}% ${py}%, ${edgeX2}% ${cornerY}%)`;
+    curlLayer.style.background = side==='right'
+      ? 'linear-gradient(135deg,#fffdf5 0%,#f4ead6 36%,#cbb99a 68%,#746047 100%)'
+      : 'linear-gradient(225deg,#fffdf5 0%,#f4ead6 36%,#cbb99a 68%,#746047 100%)';
+    curlLayer.style.opacity = String(dragging ? .98 : .72);
+    bookFrame.classList.add('is-curling');
+    bookFrame.classList.toggle('is-dragging',!!dragging);
+  }
+  function cornerAt(event) {
+    const rect = bookFrame.getBoundingClientRect(), size = cornerSize();
+    const localX=event.clientX-rect.left, localY=event.clientY-rect.top;
+    if(localX > rect.width-size && localY < size && current < pages.length-1) return {side:'right',bottom:false};
+    if(localX > rect.width-size && localY > rect.height-size && current < pages.length-1) return {side:'right',bottom:true};
+    if(localX < size && localY < size && current > 0) return {side:'left',bottom:false};
+    if(localX < size && localY > rect.height-size && current > 0) return {side:'left',bottom:true};
+    return null;
+  }
+  bookFrame.addEventListener('pointermove', event => {
+    if(turning) return;
+    if(curlGesture && curlGesture.pointerId===event.pointerId) {
+      curlGesture.lastX=event.clientX;curlGesture.lastY=event.clientY;
+      paintCurl(event.clientX,event.clientY,curlGesture.side,curlGesture.bottom,true);
+      return;
+    }
+    if(event.pointerType==='touch') return;
+    const corner=cornerAt(event);
+    if(corner) paintCurl(event.clientX,event.clientY,corner.side,corner.bottom,false);
+    else if(!curlGesture) clearCurl();
+  });
+  bookFrame.addEventListener('pointerdown', event => {
+    if(turning) return;
+    const corner=cornerAt(event);
+    if(!corner) return;
+    event.preventDefault();
+    curlGesture={...corner,pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,lastX:event.clientX,lastY:event.clientY};
+    try{bookFrame.setPointerCapture(event.pointerId)}catch(_){}
+    paintCurl(event.clientX,event.clientY,corner.side,corner.bottom,true);
+  });
+  bookFrame.addEventListener('pointerup', event => {
+    if(!curlGesture || curlGesture.pointerId!==event.pointerId) return;
+    const gesture=curlGesture;
+    const dx=event.clientX-gesture.startX, dy=event.clientY-gesture.startY;
+    const moved=Math.hypot(dx,dy);
+    clearCurl();
+    // Drag the right corner inward to go forward; drag the left corner inward to go back.
+    if(moved>24 && ((gesture.side==='right' && dx < -18) || (gesture.side==='left' && dx > 18))) {
+      goTo(current+(gesture.side==='right'?1:-1));
+    } else if(moved<10 && gesture.side==='right') {
+      goTo(current+1);
+    } else if(moved<10 && gesture.side==='left') {
+      goTo(current-1);
+    }
+  });
+  bookFrame.addEventListener('pointercancel',clearCurl);
+  bookFrame.addEventListener('lostpointercapture',()=>{if(curlGesture)clearCurl()});
+  bookFrame.addEventListener('pointerleave',()=>{if(!curlGesture)clearCurl()});
+  // Clear stale curl geometry whenever a new page is committed.
+  const originalRender = render;
+  render = function(){ clearCurl(); originalRender(); };
   init();
 })();
