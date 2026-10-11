@@ -14,7 +14,7 @@ NARATIVA is a creative-work universe: one creator identity and canonical asset c
 
 ## Current release
 
-- Hatchable deployment: [NARATIVA v5](https://narativa-one-story.hatchable.site), deployed with the adaptive experience pages. **Hatchable visibility is still Personal/Private**, so anonymous visitors still encounter its sign-in wall until the owner changes that setting.
+- Hatchable deployment: [NARATIVA v7](https://narativa-one-story.hatchable.site), including the adaptive experience pages and the explicit public email-confirmation redirect. **Hatchable visibility is still Personal/Private**, so anonymous visitors still encounter its sign-in wall until the owner changes that setting.
 - Public source repository: [Yudi8377/NARATIVA](https://github.com/Yudi8377/NARATIVA).
 - **Public website live:** https://yudi8377.github.io/NARATIVA/ — the GitHub Pages deployment workflow completed successfully and all role-specific pages/assets returned HTTP 200 in a live-origin smoke test.
 - Backend: Supabase project `hdsqwkydgruyfbqqwhdk`.
