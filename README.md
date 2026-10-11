@@ -19,7 +19,8 @@ NARATIVA is a creative-work universe: one creator identity and canonical asset c
 - **Public website live:** https://yudi8377.github.io/NARATIVA/ — the GitHub Pages deployment workflow completed successfully and all role-specific pages/assets returned HTTP 200 in a live-origin smoke test.
 - Backend: Supabase project `hdsqwkydgruyfbqqwhdk`.
 - Collective Intelligence endpoint: `collective-orchestrator` v1 with JWT verification.
-- The Creator Studio scene planner and new role-specific local workspaces are prototypes; local drafts/catalogs remain in the browser and are not cloud-synced.
+- Creator Studio saves authenticated works and versioned manuscripts to Supabase; published works appear in Reader. Local unauthenticated drafts remain in the browser.
+- Creator asset files can be explicitly uploaded to a private Supabase Storage bucket after a creator signs in and opens/saves a project. Asset metadata is owner-scoped; a user-session upload and cross-account access test are still outstanding.
 
 ## Adaptive experiences
 
@@ -55,7 +56,7 @@ The collective backend currently **stores tasks but does not execute autonomous 
 - Collective tasks and agents are owner-scoped.
 - Shared knowledge and skills are discoverable only after verification.
 - Service-role and provider secrets must never be placed in browser code.
-- Reader bookmarks, Creator Studio drafts, and Commerce Center catalog entries in this release are **local browser data**, not backed up or synchronized.
+- Reader bookmarks and unauthenticated Creator Studio drafts remain **local browser data**. Authenticated creator works/versions and private asset metadata are cloud-backed. Commerce catalog metadata is stored on the creator's cloud book record, but vendor APIs and checkout are not active.
 - Admin UI is a shell only; there is no admin role provisioning or privileged operation API yet.
 - Commerce vendor cards are readiness indicators, not active connections. No listing or transaction is created by this release.
 - Before production scale, add moderator roles, server-side approval, access tests, rate limits, retention/deletion controls, cost alerts, and child privacy/consent protections.
