@@ -44,9 +44,14 @@ Deno.serve(async (req: Request) => {
       const url = new URL(req.url); const code = url.searchParams.get("code"); const state = url.searchParams.get("state");
       if (!code || !state) return siteRedirect("error", "missing_callback_parameters");
       const stateHash = await sha256(state);
-      const { data: pending, error: pendingError } = await supabase.from("narativa_etsy_oauth_states").select("*").eq("state_hash", stateHash).gt("expires_at", new Date().toISOString()).maybeSingle();
+      // Consume the state atomically: concurrent/replayed callbacks cannot both exchange the same code verifier.
+      const { data: pending, error: pendingError } = await supabase.from("narativa_etsy_oauth_states")
+        .delete()
+        .eq("state_hash", stateHash)
+        .gt("expires_at", new Date().toISOString())
+        .select("user_id, encrypted_code_verifier")
+        .maybeSingle();
       if (pendingError || !pending) return siteRedirect("error", "invalid_or_expired_state");
-      await supabase.from("narativa_etsy_oauth_states").delete().eq("state_hash", stateHash);
       const verifier = await decrypt(pending.encrypted_code_verifier);
       const tokenResponse = await fetch("https://api.etsy.com/v3/public/oauth/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "authorization_code", client_id: ETSY_CLIENT_ID, redirect_uri: ETSY_REDIRECT_URI, code, code_verifier: verifier }) });
       if (!tokenResponse.ok) return siteRedirect("error", "etsy_token_exchange_failed");
