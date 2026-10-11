@@ -529,6 +529,51 @@
     let ownedBooks = [];
     const money = value => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(value || 0));
     function commerceNote(message, kind) { $('vendorNotice').textContent = message; $('vendorNotice').dataset.kind = kind || 'info'; }
+    const etsyButton = $('etsyConnectButton');
+    const etsyStatus = $('etsyConnectionStatus');
+    function setEtsyStatus(message, kind) {
+      if (etsyStatus) { etsyStatus.textContent = 'Status Etsy: ' + message; etsyStatus.dataset.kind = kind || 'info'; }
+    }
+    async function refreshEtsyStatus() {
+      if (!etsyStatus) return;
+      if (!db) { setEtsyStatus('library Supabase belum termuat', 'error'); return; }
+      if (!user) { setEtsyStatus('belum terhubung · masuk melalui Akun / Masuk untuk mengotorisasi toko', 'info'); return; }
+      try {
+        const { data, error } = await db.functions.invoke('etsy-connect', { body: { action: 'status' } });
+        if (error) throw error;
+        if (data?.status === 'connected') {
+          setEtsyStatus('terhubung · otorisasi aktif' + (data.updated_at ? ' · diperbarui ' + new Date(data.updated_at).toLocaleString('id-ID') : ''), 'success');
+          if (etsyButton) etsyButton.textContent = 'Periksa koneksi Etsy';
+        } else if (data?.status === 'action_required') {
+          setEtsyStatus('perlu otorisasi ulang · hubungkan kembali toko', 'error');
+          if (etsyButton) etsyButton.textContent = 'Hubungkan ulang Etsy';
+        } else {
+          setEtsyStatus('belum terhubung · otorisasi OAuth belum dilakukan', 'info');
+          if (etsyButton) etsyButton.textContent = 'Hubungkan Etsy (OAuth)';
+        }
+      } catch (_) {
+        setEtsyStatus('backend OAuth belum dipasang/aktif di Supabase; status koneksi belum dapat diverifikasi', 'error');
+      }
+    }
+    if (etsyButton) etsyButton.addEventListener('click', async () => {
+      if (!user) { setEtsyStatus('masuk terlebih dahulu melalui Akun / Masuk', 'error'); commerceNote('Otorisasi Etsy memerlukan akun NARATIVA yang masuk.', 'error'); return; }
+      etsyButton.disabled = true;
+      etsyButton.textContent = 'Menyiapkan OAuth…';
+      try {
+        const { data, error } = await db.functions.invoke('etsy-connect', { body: { action: 'start' } });
+        if (error) throw error;
+        if (!data?.authorization_url) throw new Error('Backend tidak mengembalikan URL otorisasi.');
+        window.location.assign(data.authorization_url);
+      } catch (_) {
+        setEtsyStatus('belum aktif · backend OAuth belum tersedia atau konfigurasi Etsy belum lengkap', 'error');
+        commerceNote('Koneksi Etsy belum bisa dimulai. Fungsi server etsy-connect dan rahasia ETSY_* harus dipasang di proyek Supabase NARATIVA terlebih dahulu. Jangan masukkan API key/token ke halaman ini.', 'error');
+        etsyButton.disabled = false;
+        etsyButton.textContent = 'Hubungkan Etsy (OAuth)';
+      }
+    });
+    const etsyResult = new URLSearchParams(window.location.search).get('etsy');
+    if (etsyResult === 'connected') setEtsyStatus('terhubung · callback OAuth berhasil diterima', 'success');
+    else if (etsyResult === 'error') setEtsyStatus('gagal atau dibatalkan · periksa konfigurasi OAuth lalu coba lagi', 'error');
     function renderProducts() {
       const list = $('productList'); list.replaceChildren();
       const data = ownedBooks.filter(book => book.metadata && book.metadata.commerce);
@@ -560,7 +605,7 @@
       if (!user) {
         const option = document.createElement('option'); option.value = ''; option.textContent = 'Masuk untuk memuat karya'; select.appendChild(option);
         ownedBooks = []; renderProducts();
-        commerceNote('Katalog kini memakai data akun. Masuk di halaman utama → Collective AI, lalu buka Creator Studio.', 'info'); return;
+        commerceNote('Katalog kini memakai data akun. Masuk di halaman utama → Collective AI, lalu buka Creator Studio.', 'info'); refreshEtsyStatus(); return;
       }
       const { data, error } = await db.from('books').select('id,title,slug,status,description,content_type,metadata').eq('owner_id',user.id).order('updated_at',{ascending:false}).limit(100);
       if (error) { commerceNote('Karya akun gagal dimuat: ' + error.message, 'error'); return; }
@@ -569,6 +614,7 @@
       ownedBooks.forEach(book => { const option = document.createElement('option'); option.value = book.id; option.textContent = book.title + ' · ' + book.status; select.appendChild(option); });
       renderProducts();
       commerceNote('Katalog tersambung ke akun ' + (user.email || '') + '. Harga tersimpan sebagai metadata referensi; transaksi dan vendor belum terhubung.', 'success');
+      refreshEtsyStatus();
     }
     $('productBook').addEventListener('change', () => {
       const book = ownedBooks.find(item => item.id === $('productBook').value);
@@ -617,7 +663,7 @@
         card.hidden = !show;
         if (show) visible++;
       });
-      $('vendorResults').textContent = visible + ' kanal ditemukan dari 31';
+      $('vendorResults').textContent = visible + ' kanal ditemukan dari ' + document.querySelectorAll('[data-vendor-card]').length + ' kanal';
     });
     loadCommerceBooks();
     db?.auth.onAuthStateChange(() => loadCommerceBooks());
