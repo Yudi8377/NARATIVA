@@ -13,11 +13,11 @@ The GitHub Pages site must never contain Etsy secrets, refresh tokens, or a Supa
 3. Set the exact Etsy OAuth callback URL to: https://hdsqwkydgruyfbqqwhdk.supabase.co/functions/v1/etsy-connect
 4. Apply migration supabase/migrations/202610110001_etsy_connector.sql.
 5. Deploy supabase/functions/etsy-connect/index.ts as function etsy-connect with gateway JWT verification disabled **only because** this function validates the bearer JWT itself for POST requests and uses state-validated public OAuth callback handling for GET. Never remove the in-function bearer validation.
-6. Configure Edge Function secrets (never commit values):
+6. Configure the two required Edge Function secrets in Supabase Dashboard → Edge Functions → Secrets (never commit values):
    - ETSY_CLIENT_ID: Etsy API keystring/client ID.
-   - ETSY_REDIRECT_URI: exact callback URL above.
+   - ETSY_REDIRECT_URI is optional because the function defaults to the exact callback URL above; set it only if the registered callback differs (it must match Etsy exactly).
    - ETSY_TOKEN_ENCRYPTION_KEY: random 32-byte key encoded as base64 or 64 hex characters. Keep it stable; changing it makes existing tokens unreadable.
-   - NARATIVA_SITE_URL: https://yudi8377.github.io/NARATIVA
+   - NARATIVA_SITE_URL defaults to https://yudi8377.github.io/NARATIVA; set it only if the site URL changes.
    - SUPABASE_URL: NARATIVA project URL.
    - SUPABASE_SERVICE_ROLE_KEY: NARATIVA service-role secret, stored only as an Edge Function secret.
 7. Initial scopes are read-only shops_r and listings_r. Request broader scopes only after the listing/order workflow is designed and approved.
