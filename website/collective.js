@@ -149,8 +149,45 @@
       $("knowledgeForm").reset();
     } catch (e) { note(e.message, "error"); }
   });
+  function renderTasks(tasks) {
+    output.replaceChildren();
+    if (!tasks?.length) {
+      const p = document.createElement("p"); p.className = "collective-empty"; p.textContent = "Belum ada tugas. Buat tugas pertama di atas."; output.appendChild(p); return;
+    }
+    tasks.forEach(task => {
+      const card = document.createElement("article"); card.className = "collective-item";
+      const title = document.createElement("h4"); title.textContent = task.title || "Tugas";
+      const meta = document.createElement("p"); meta.textContent = (task.task_type || "other") + " · status: " + (task.status || "unknown");
+      card.append(title, meta);
+      if (task.result && typeof task.result === "object") {
+        const heading = document.createElement("p"); heading.textContent = task.result.plan_title || "Hasil tugas";
+        const mode = document.createElement("small"); mode.textContent = task.result.mode === "structured-planning-only" ? "Rencana terstruktur · bukan keluaran model AI" : "Hasil tugas tersimpan";
+        card.append(heading, mode);
+        const deliverables = document.createElement("ul");
+        (task.result.deliverables || []).forEach(item => { const li = document.createElement("li"); li.textContent = item; deliverables.appendChild(li); });
+        if (deliverables.childNodes.length) card.appendChild(deliverables);
+        const details = document.createElement("details");
+        const summary = document.createElement("summary"); summary.textContent = "Lihat hasil lengkap";
+        const pre = document.createElement("pre"); pre.className = "collective-result-json"; pre.textContent = JSON.stringify(task.result, null, 2);
+        details.append(summary, pre); card.appendChild(details);
+      }
+      if (task.status !== "completed" && task.status !== "running") {
+        const run = document.createElement("button"); run.type = "button"; run.className = "button secondary"; run.textContent = "Jalankan rencana tugas";
+        run.addEventListener("click", async () => {
+          run.disabled = true; run.textContent = "Menyusun rencana…";
+          try {
+            const r = await invoke("execute_task", { task_id: task.id });
+            note(r.notice || "Rencana tugas dibuat.", "success");
+            await loadTasks();
+          } catch (e) { note(e.message || "Tugas belum dapat dijalankan.", "error"); run.disabled = false; run.textContent = "Coba lagi"; }
+        });
+        card.appendChild(run);
+      }
+      output.appendChild(card);
+    });
+  }
   async function loadTasks() {
-    try { const r = await invoke("list_tasks"); renderList(r.tasks, ["title","task_type","status"], "Belum ada tugas. Buat tugas pertama di atas."); }
+    try { const r = await invoke("list_tasks"); renderTasks(r.tasks); }
     catch (e) { note(e.message, "error"); }
   }
   async function loadAgents() {
