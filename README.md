@@ -37,7 +37,7 @@ See [Adaptive Experiences Architecture](docs/ADAPTIVE-EXPERIENCES.md) for the UI
 
 ## Creative Learning Room
 
-The initial learning room measures basic image brightness/tonal distribution locally, offers browser-based adjustments, and provides step-by-step software learning guides with optional browser speech. It is not yet a vision-model assessment, live screen-aware assistant, or direct Photoshop/Corel integration. Photos remain local in this release.
+The Creative Learning Room now includes a local adaptive mentor layer: learners choose skill level, target outcome, problem category, and quality intent; software-specific case guidance, quality checks, step self-evaluation, browser-local progress, and official learning links adapt to those choices. Image analysis still measures basic pixel brightness/tonal distribution locally; this is rules-based personalization, not a live LLM/vision model or screen-aware assistant. No photos are sent to a model. See [Adaptive Learning Mentor](docs/ADAPTIVE-LEARNING-MENTOR.md) for current capabilities, source-grounding policy, expert lesson contract, and next phases.
 
 ## Collective Intelligence foundation
 
