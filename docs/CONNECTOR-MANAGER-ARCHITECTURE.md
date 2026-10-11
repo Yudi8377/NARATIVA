@@ -88,3 +88,12 @@ The OAuth implementation and migration are in the repository, and the function w
 Required setup guide: [ETSY-CONNECTOR-SETUP.md](./ETSY-CONNECTOR-SETUP.md).
 
 The callback handler consumes the OAuth state atomically, preventing two concurrent/replayed callbacks from both exchanging the same state. This hardening was deployed to the NARATIVA Supabase project as Edge Function version 3; verify the deployed function independently during release checks.
+
+
+## WooCommerce read-only adapter (first generic connector)
+
+The `woocommerce-connect` Supabase Edge Function is deployed as a separate, authenticated server-side adapter. It accepts `configure`, `status`, and `disconnect` actions. Configuration performs a real GET to `/wp-json/wc/v3/products?per_page=1&context=view`; only a successful JSON response marks it connected. No writes are exposed. Consumer credentials are encrypted with AES-GCM before storage in `public.narativa_connector_connections`, which denies access to anon/authenticated roles and grants table access only to service_role. The browser never receives stored credentials back.
+
+Required Supabase Edge Function secret: `CONNECTOR_TOKEN_ENCRYPTION_KEY`, a stable random 32-byte value (64 hex characters or base64). Generate a dedicated key; do not reuse the Etsy key. Set it in Supabase Dashboard → Edge Functions → Secrets. Never paste the key into chat or commit it. WooCommerce setup requires a public HTTPS store and a dedicated REST API key with **Read** permission. The adapter blocks non-HTTPS URLs, common local/private host patterns, and redirects; it uses a 10-second timeout and returns normalized error codes. It has no order, payment, product-write, or inventory-write capability.
+
+The function was deployed independently of GitHub Pages. Live WooCommerce verification is pending until the encryption secret and a merchant-owned store's read-only key are configured by the user.
