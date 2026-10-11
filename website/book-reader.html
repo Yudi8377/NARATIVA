@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#12110f">
+<meta name="description" content="Buku interaktif NARATIVA dengan sampul, daftar isi, dan animasi membalik halaman.">
+<title>Buku Interaktif — NARATIVA</title>
+<link rel="stylesheet" href="book-reader.css">
+<script defer src="reader-catalog.js"></script><script defer src="book-reader.js"></script>
+</head>
+<body>
+<main class="reader-shell">
+<header class="reader-topbar">
+  <a class="wordmark" href="reader.html" title="Kembali ke katalog">NARATIVA <span>BOOKS</span></a>
+  <div class="book-heading"><span>RUANG BACA INTERAKTIF</span><h1 id="bookTitle">Memuat buku…</h1></div>
+  <div class="top-actions"><button id="screenMode" type="button" aria-pressed="false">⛶ Layar penuh</button><button id="exitReader" class="close-button" type="button" aria-label="Keluar dari buku" title="Keluar">×</button></div>
+</header>
+<section class="book-stage" aria-label="Buku interaktif">
+  <div class="book-shadow"></div>
+  <button id="previous" class="edge-control edge-prev" type="button" aria-label="Halaman sebelumnya" title="Kembali">‹</button>
+  <div class="book-frame" id="bookFrame">
+    <div class="page-underlay"></div>
+    <article id="bookPage" class="book-page" aria-live="polite"></article>
+    <div id="turnLayer" class="turn-layer" aria-hidden="true" hidden></div>
+  </div>
+  <button id="next" class="edge-control edge-next" type="button" aria-label="Halaman berikutnya" title="Halaman berikutnya">›</button>
+</section>
+<footer class="reader-controls">
+  <button id="previousBottom" type="button">← Kembali</button>
+  <div class="page-progress"><span id="pageLabel">Sampul</span><div class="progress-track"><i id="progressBar"></i></div></div>
+  <button id="nextBottom" class="next-action" type="button">Buka buku →</button>
+  <button id="download" class="download-action" type="button">Unduh halaman</button>
+</footer>
+<p id="readerNote" class="reader-note" aria-live="polite"></p>
+</main>
+</body></html>
