@@ -57,9 +57,7 @@
     return list;
   }
   function makeCoverPage() {
-    const root = element('section','book-page is-cover');
-    root.append(buildCover());
-    return {node:root,label:'Sampul',download:null};
+    return {node:buildCover(),label:'Sampul',download:null};
   }
   function makeContentsPage() {
     const body = addContents();
@@ -148,22 +146,24 @@
     document.title=work.title+' — Buku Interaktif NARATIVA';
     showMessage((work.author||'Kreator NARATIVA')+' · '+(work.rights||'Lisensi mengikuti ketentuan karya')+' · Gunakan panah kiri/kanan atau tombol untuk membalik halaman.');
     pages.push(makeCoverPage());
-    pages.push(makeContentsPage());
+    let interiorPages = [];
     try {
-      if(Array.isArray(work.localPages)&&work.localPages.length) pages.push(...makeArtPages());
+      if(Array.isArray(work.localPages)&&work.localPages.length) interiorPages = makeArtPages();
       else if(work.contentUrl){
         showMessage('Membuka naskah lokal…');
         const response=await fetch(work.contentUrl);
         if(!response.ok)throw new Error('HTTP '+response.status);
         const text=await response.text();
         contentPages=makeTextPages(text);
-        pages.push(...contentPages);
-      } else if(work.localPlayerUrl) pages.push(makeMediaPage());
-      else pages.push({node:buildPaperPage('Isi karya',element('p','',work.description||'Konten belum tersedia.'),3),label:'Isi karya',download:null});
+        interiorPages=contentPages;
+      } else if(work.localPlayerUrl) interiorPages = [makeMediaPage()];
+      else interiorPages = [{node:buildPaperPage('Isi karya',element('p','',work.description||'Konten belum tersedia.'),3),label:'Isi karya',download:null}];
     } catch(error) {
       const copy=element('div');copy.append(element('p','','Naskah belum dapat dimuat dari penyimpanan NARATIVA.'),element('p','','Periksa koneksi lalu muat ulang buku ini.'));
-      pages.push({node:buildPaperPage('Naskah belum tersedia',copy,3),label:'Naskah belum tersedia',download:null});
+      interiorPages=[{node:buildPaperPage('Naskah belum tersedia',copy,3),label:'Naskah belum tersedia',download:null}];
     }
+    pages.push(makeContentsPage());
+    pages.push(...interiorPages);
     pages.push(makeClosingPage());
     render();
     showMessage((work.author||'Kreator NARATIVA')+' · '+(work.rights||'Lisensi mengikuti ketentuan karya')+' · Buku interaktif siap dibaca.');
@@ -189,6 +189,7 @@
   $('download').addEventListener('click',async()=>{
     const entry=pages[current];
     if(!entry?.download){showMessage('Unduhan tidak tersedia untuk halaman ini. Hak unduh mengikuti lisensi karya.');return;}
+    if(work.license!=='CC BY 4.0'){showMessage('Unduhan untuk karya ini belum dibuka karena izin distribusi file belum dikonfirmasi.');return;}
     if(entry.image){
       if(work.license!=='CC BY 4.0'){showMessage('Lisensi karya belum mengizinkan unduhan halaman.');return;}
       try{const response=await fetch(entry.download);if(!response.ok)throw new Error('fetch');const blob=await response.blob(),url=URL.createObjectURL(blob),a=element('a');a.href=url;a.download=work.id+'-halaman-'+String(current+1).padStart(2,'0')+'.svg';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);showMessage('Halaman diunduh. Atribusi tetap diperlukan sesuai lisensi CC BY 4.0.');}catch(_){showMessage('Unduhan gagal. Coba lagi setelah halaman dimuat.');}
