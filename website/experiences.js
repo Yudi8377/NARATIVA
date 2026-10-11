@@ -144,7 +144,7 @@
         const emblem = document.createElement('span'); emblem.className = 'x-catalog-emoji'; emblem.textContent = item.emoji || '✦';
         const label = document.createElement('span'); label.textContent = item.category.toUpperCase() + ' · ' + item.year;
         const title = document.createElement('b'); title.textContent = item.title.toUpperCase();
-        const footer = document.createElement('small'); footer.textContent = 'ARSIP KLASIK · ' + item.format.toUpperCase();
+        const footer = document.createElement('small'); footer.textContent = 'TERSIMPAN DI NARATIVA · ' + item.format.toUpperCase();
         cover.append(emblem,label,title,footer);
         const meta = document.createElement('div'); meta.className = 'x-story-meta';
         const category = document.createElement('span'); category.textContent = item.category.toUpperCase() + ' · ' + item.format.toUpperCase();
@@ -153,11 +153,11 @@
         const heading = document.createElement('h3'); heading.textContent = item.title;
         const description = document.createElement('p'); description.textContent = item.description;
         const author = document.createElement('small'); author.className = 'x-story-author'; author.textContent = item.author + ' · ' + item.genre;
-        const button = document.createElement('button'); button.type = 'button'; button.className = 'x-text-button'; button.dataset.read = item.id; button.textContent = (item.contentUrl || item.localPages || item.localPlayerUrl) ? 'Baca di NARATIVA →' : 'Detail & sumber ↗';
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'x-text-button'; button.dataset.read = item.id; button.textContent = 'Baca di NARATIVA →';
         card.append(cover,meta,heading,description,author,button);
         grid.appendChild(card);
       });
-      $('catalogCount').textContent = catalog.length + ' karya di katalog · 20 komik arsip, 20 fantasi, 20 misteri, plus 3 karya lokal original (komik, manga, anime).';
+      $('catalogCount').textContent = catalog.length + ' karya contoh tersedia langsung di NARATIVA · media lokal, tanpa tautan baca pihak ketiga.';
     }
 
     $('storyGrid').addEventListener('click', event => {
@@ -207,7 +207,7 @@
         if (!card.hidden) visibleCount++;
       });
       $('readerEmpty').hidden = visibleCount > 0;
-      $('catalogCount').textContent = visibleCount + ' karya ditampilkan dari katalog. Gunakan filter genre dan jenis untuk menemukan bacaan.';
+      $('catalogCount').textContent = visibleCount + ' karya contoh ditampilkan · semua konten katalog presentasi dibaca dari NARATIVA.';
     }
     search.addEventListener('input', filterStories);
     genreFilter.addEventListener('change', filterStories);
