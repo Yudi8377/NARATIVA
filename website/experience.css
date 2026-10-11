@@ -75,3 +75,10 @@
 .x-connector-setup li { margin: .3rem 0; line-height: 1.5; }
 .x-connector-doc { display: inline-block; margin-top: .35rem; font-weight: 650; }
 #vendorResults { margin: .5rem 0 1rem; }
+
+
+/* WooCommerce read-only connector setup */
+.x-connector-form { display: grid; gap: .55rem; max-width: 42rem; }
+.x-connector-form input { width: 100%; box-sizing: border-box; }
+.x-connector-form button { justify-self: start; }
+.x-connector-form .x-muted { margin: .35rem 0 .65rem; line-height: 1.55; }
