@@ -282,6 +282,42 @@
       });
       const note = document.createElement('p'); note.className = 'x-muted'; note.textContent = files.length > 12 ? 'Menampilkan 12 dari ' + files.length + ' berkas. Berkas tidak diunggah.' : 'Berkas hanya dibaca oleh browser ini; tidak dikirim ke server.'; box.appendChild(note);
     });
+    $('uploadAssets').addEventListener('click', async () => {
+      const files = Array.from($('assetUpload').files || []);
+      if (!files.length) { setNotice('Pilih satu atau beberapa aset terlebih dahulu.', 'error'); return; }
+      if (!db || !signedInUser) { setNotice('Masuk terlebih dahulu untuk mengunggah aset privat.', 'error'); return; }
+      if (!activeBookId) { setNotice('Simpan atau buka karya dari daftar proyek sebelum mengunggah aset.', 'error'); return; }
+      if (files.some(file => file.size > 50 * 1024 * 1024)) { setNotice('Setiap berkas harus berukuran 50 MB atau kurang.', 'error'); return; }
+      const button = $('uploadAssets'); button.disabled = true; button.textContent = 'Mengunggah aset…';
+      let uploaded = 0;
+      try {
+        const { data: sessionData } = await db.auth.getSession();
+        signedInUser = sessionData.session?.user || null;
+        if (!signedInUser) throw new Error('Sesi berakhir. Masuk kembali.');
+        for (const file of files) {
+          const safeName = file.name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(-120) || 'asset';
+          const path = signedInUser.id + '/' + activeBookId + '/' + crypto.randomUUID() + '-' + safeName;
+          const { error: uploadError } = await db.storage.from('narativa-assets').upload(path, file, { upsert:false, contentType:file.type || 'application/octet-stream', cacheControl:'3600' });
+          if (uploadError) throw uploadError;
+          const ext = (file.name.split('.').pop() || '').toLowerCase();
+          const assetType = file.type.startsWith('image/') ? 'page_image' : file.type.startsWith('audio/') ? 'audio' : file.type.startsWith('video/') ? 'video' : ['glb','gltf','obj','stl','fbx','usd','usdz'].includes(ext) ? 'model_3d' : ['pdf','txt','md','doc','docx','rtf'].includes(ext) ? 'document' : 'other';
+          const { error: recordError } = await db.from('book_assets').insert({
+            book_id:activeBookId, asset_type:assetType, asset_url:path, alt_text:file.name,
+            created_by:signedInUser.id,
+            rights_metadata:{ owner_name:$('rightsOwner').value.trim(), license:$('rightsLicense').value, ai_processing_allowed:$('aiPermission').checked },
+            metadata:{ original_name:file.name, mime_type:file.type || 'application/octet-stream', size_bytes:file.size, storage_bucket:'narativa-assets', visibility:'private' }
+          });
+          if (recordError) throw recordError;
+          uploaded++;
+        }
+        $('assetUpload').value = '';
+        $('assetPreview').replaceChildren();
+        const done = document.createElement('p'); done.className = 'x-muted'; done.textContent = uploaded + ' aset berhasil diunggah dan dicatat sebagai aset privat karya ini.'; $('assetPreview').appendChild(done);
+        setNotice('Upload selesai. Berkas tersimpan pada bucket privat dan memiliki metadata hak/provenance.', 'success');
+      } catch (e) {
+        setNotice('Upload terhenti setelah ' + uploaded + ' aset: ' + (e.message || 'periksa izin, tipe berkas, dan koneksi.'), 'error');
+      } finally { button.disabled = false; button.textContent = 'Unggah aset ke cloud'; }
+    });
     refreshCloudProjects().catch(e => setNotice('Gagal memeriksa akun: ' + e.message, 'error'));
     db?.auth.onAuthStateChange(() => refreshCloudProjects());
   }
