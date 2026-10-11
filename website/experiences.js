@@ -9,30 +9,89 @@
 
   if (page === 'reader') {
     const stories = {
-      rain: { title:'Perpustakaan di Ujung Hujan', body:'Di kota yang selalu diguyur hujan, seorang penjaga perpustakaan menemukan buku tanpa judul. Setiap halaman berisi kenangan yang belum pernah terjadi. Pada halaman terakhir, ia melihat nama seseorang yang belum pernah ia temui—namanya sendiri, ditulis dengan tinta yang masih basah.' },
+      rain: { title:'Perpustakaan di Ujung Hujan', body:'Di kota yang selalu diguyur hujan, seorang penjaga perpustakaan menemukan buku tanpa judul. Setiap halaman berisi kenangan yang belum pernah terjadi. Pada halaman terakhir, ia melihat namanya sendiri, ditulis dengan tinta yang masih basah.' },
       cloud: { title:'Kota di Atas Awan', body:'Di atas kabut yang tak pernah surut, sebuah kota bergerak mengikuti arah angin. Seorang kurir muda menerima paket tanpa alamat. Satu-satunya petunjuk adalah peta yang berubah setiap kali ia berkedip.' },
       archive: { title:'Arsip Tengah Malam', body:'Setiap tengah malam, satu berkas baru muncul di ruang arsip yang telah dikunci selama dua puluh tahun. Detektif Mara menemukan bahwa semua berkas itu mencatat kejadian sehari sebelum terjadi.' }
     };
+    const catalog = Array.isArray(window.NARATIVA_READER_CATALOG) ? window.NARATIVA_READER_CATALOG : [];
+    const catalogById = new Map(catalog.map(item => [item.id, item]));
     const cloudIds = new Set();
     let active = 'rain';
     const modal = $('readerModal');
+    const grid = $('storyGrid');
+
     function openStory(id) {
-      active = stories[id] ? id : 'rain';
-      $('readerTitle').textContent = stories[active].title;
-      $('readerBody').textContent = stories[active].body;
-      $('readerNotice').textContent = cloudIds.has(active) ? 'Karya terbit dari katalog NARATIVA. Progres baca pada tahap ini disimpan di perangkat.' : 'Konten demo. Riwayat baca hanya disimpan di perangkat ini.';
-      $('nextStory').hidden = cloudIds.has(active);
+      active = stories[id] || catalogById.has(id) || cloudIds.has(id) ? id : 'rain';
+      const item = catalogById.get(active);
+      const story = stories[active] || {title:item?.title || 'Karya NARATIVA',body:item?.description || 'Karya terbit dari katalog NARATIVA.'};
+      $('readerTitle').textContent = story.title;
+      $('readerBody').textContent = story.body;
+      $('readerDetails').textContent = item ? [
+        'Penulis: ' + item.author,
+        'Kategori: ' + item.category.toUpperCase() + ' · Genre: ' + item.genre,
+        'Jenis: ' + item.format + ' · Tahun: ' + item.year,
+        'Bahasa: ' + item.language,
+        'Hak penggunaan: ' + item.rights
+      ].join('  |  ') : (cloudIds.has(active) ? 'Karya kreator NARATIVA · baca versi terbit' : 'Cerita demo orisinal NARATIVA · contoh pengalaman membaca');
+      const source = $('readerSource');
+      const sourceUrl = item?.read || item?.source || null;
+      source.hidden = !sourceUrl;
+      if (sourceUrl) {
+        source.href = sourceUrl;
+        source.textContent = item?.sourceLabel || (item?.category === 'komik' ? 'Buka arsip komik ↗' : 'Baca sumber asli ↗');
+      }
+      $('readerNotice').textContent = item ? 'Tautan menuju arsip sumber. Status hak pada halaman sumber perlu diperiksa sebelum mengunduh atau menerbitkan ulang.' : (cloudIds.has(active) ? 'Karya terbit dari katalog NARATIVA. Progres baca disimpan di perangkat.' : 'Konten demo orisinal. Riwayat baca hanya disimpan di perangkat ini.');
+      $('nextStory').hidden = !!item || cloudIds.has(active);
       modal.hidden = false;
       $('closeReader').focus();
       safeStore.set('narativa-reader-last', { id: active, progress: 0, at: new Date().toISOString() });
     }
-    $('storyGrid').addEventListener('click', event => { const btn = event.target.closest('[data-read]'); if (btn) openStory(btn.dataset.read); });
+
+    function renderCatalog() {
+      grid.replaceChildren();
+      catalog.forEach(item => {
+        stories[item.id] = {title:item.title,body:item.description};
+        const card = document.createElement('article');
+        card.className = 'x-story-card';
+        card.dataset.title = item.title;
+        card.dataset.genre = item.category;
+        card.dataset.search = [item.title,item.author,item.genre,item.format,item.year,item.language].join(' ').toLocaleLowerCase('id');
+        const cover = document.createElement('div');
+        cover.className = 'x-cover ' + (item.category === 'komik' ? 'cover-cloud' : item.category === 'fantasi' ? 'cover-rain' : 'cover-midnight');
+        const emblem = document.createElement('span'); emblem.className = 'x-catalog-emoji'; emblem.textContent = item.emoji || '✦';
+        const label = document.createElement('span'); label.textContent = item.category.toUpperCase() + ' · ' + item.year;
+        const title = document.createElement('b'); title.textContent = item.title.toUpperCase();
+        const footer = document.createElement('small'); footer.textContent = 'ARSIP KLASIK · ' + item.format.toUpperCase();
+        cover.append(emblem,label,title,footer);
+        const meta = document.createElement('div'); meta.className = 'x-story-meta';
+        const category = document.createElement('span'); category.textContent = item.category.toUpperCase() + ' · ' + item.format.toUpperCase();
+        const year = document.createElement('span'); year.textContent = item.year;
+        meta.append(category,year);
+        const heading = document.createElement('h3'); heading.textContent = item.title;
+        const description = document.createElement('p'); description.textContent = item.description;
+        const author = document.createElement('small'); author.className = 'x-story-author'; author.textContent = item.author + ' · ' + item.genre;
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'x-text-button'; button.dataset.read = item.id; button.textContent = 'Detail & baca ↗';
+        card.append(cover,meta,heading,description,author,button);
+        grid.appendChild(card);
+      });
+      $('catalogCount').textContent = catalog.length + ' karya contoh · 20 Komik · 20 Fantasi · 20 Misteri. Pilih kartu untuk melihat metadata dan membuka sumber bacaan.';
+    }
+
+    $('storyGrid').addEventListener('click', event => {
+      const btn = event.target.closest('[data-read]');
+      if (btn) openStory(btn.dataset.read);
+    });
+    document.querySelectorAll('[data-read]').forEach(btn => {
+      if (btn.closest('#storyGrid')) return;
+      btn.addEventListener('click', () => openStory(btn.dataset.read));
+    });
     $('closeReader').addEventListener('click', () => { modal.hidden = true; });
-    modal.addEventListener('click', e => { if (e.target === modal) modal.hidden = true; });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) modal.hidden = true; });
+    modal.addEventListener('click', event => { if (event.target === modal) modal.hidden = true; });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) modal.hidden = true; });
     $('saveStory').addEventListener('click', () => {
       const saved = safeStore.get('narativa-reader-saved', []);
-      if (!saved.some(item => item.id === active)) saved.push({ id: active, title: stories[active].title });
+      const title = stories[active]?.title || catalogById.get(active)?.title || 'Karya NARATIVA';
+      if (!saved.some(item => item.id === active)) saved.push({id:active,title});
       safeStore.set('narativa-reader-saved', saved);
       renderSaved();
       $('readerNotice').textContent = 'Disimpan ke daftar pada perangkat ini.';
@@ -42,17 +101,21 @@
       const saved = safeStore.get('narativa-reader-saved', []);
       $('savedStatus').replaceChildren();
       if (!saved.length) { $('savedStatus').textContent = 'Belum ada cerita yang disimpan pada perangkat ini.'; return; }
-      saved.forEach(item => { const row = document.createElement('p'); row.className = 'x-muted'; row.textContent = '▸ ' + item.title; $('savedStatus').appendChild(row); });
+      saved.forEach(item => {
+        const row = document.createElement('p'); row.className = 'x-muted'; row.textContent = '▸ ' + item.title;
+        $('savedStatus').appendChild(row);
+      });
     }
+    renderCatalog();
     renderSaved();
     const search = $('readerSearch');
     let genre = 'all';
     function filterStories() {
       const query = search.value.trim().toLocaleLowerCase('id');
       document.querySelectorAll('.x-story-card').forEach(card => {
-        const title = (card.dataset.title || '').toLocaleLowerCase('id');
-        const genres = card.dataset.genre || '';
-        card.hidden = !(title.includes(query) && (genre === 'all' || genres.split(' ').includes(genre)));
+        const haystack = ((card.dataset.search || '') + ' ' + (card.dataset.title || '') + ' ' + (card.dataset.genre || '')).toLocaleLowerCase('id');
+        const genres = (card.dataset.genre || '').split(' ');
+        card.hidden = !(haystack.includes(query) && (genre === 'all' || genres.includes(genre)));
       });
     }
     search.addEventListener('input', filterStories);
@@ -64,21 +127,22 @@
 
     const db = window.supabase?.createClient?.('https://hdsqwkydgruyfbqqwhdk.supabase.co', 'sb_publishable_m24u_7V16Y-bq_B_YydL-w_dw_4bOb8');
     async function loadPublishedWorks() {
-      const grid = $('storyGrid');
       if (!db) return;
-      const { data, error } = await db.from('books').select('id,title,description,content_type,language_code,slug,updated_at').eq('status','published').order('updated_at',{ascending:false}).limit(60);
+      const {data,error} = await db.from('books').select('id,title,description,content_type,language_code,slug,updated_at').eq('status','published').order('updated_at',{ascending:false}).limit(60);
       if (error) {
-        const note = document.createElement('p'); note.className = 'x-feedback'; note.textContent = 'Karya terbit belum dapat dimuat saat ini. Coba muat ulang halaman.';
+        const note = document.createElement('p'); note.className = 'x-feedback'; note.textContent = 'Karya kreator belum dapat dimuat; katalog klasik tetap tersedia.';
         grid.prepend(note); return;
       }
       for (const book of (data || [])) {
-        const { data: versions } = await db.from('book_versions').select('canonical_content,version_number').eq('book_id',book.id).order('version_number',{ascending:false}).limit(1);
+        const {data:versions} = await db.from('book_versions').select('canonical_content,version_number').eq('book_id',book.id).order('version_number',{ascending:false}).limit(1);
         const canonical = versions?.[0]?.canonical_content || {};
         const body = typeof canonical.body === 'string' ? canonical.body : (book.description || 'Naskah ini belum memiliki isi yang dapat ditampilkan.');
         const id = 'cloud-' + book.id;
-        stories[id] = { title: book.title, body };
+        stories[id] = {title:book.title,body};
         cloudIds.add(id);
-        const card = document.createElement('article'); card.className = 'x-story-card'; card.dataset.title = book.title; card.dataset.genre = 'karya-kreator';
+        const card = document.createElement('article'); card.className = 'x-story-card';
+        card.dataset.title = book.title; card.dataset.genre = 'karya-kreator';
+        card.dataset.search = [book.title,book.description,book.content_type,book.language_code].join(' ').toLocaleLowerCase('id');
         const cover = document.createElement('div'); cover.className = 'x-cover cover-cloud';
         const label = document.createElement('span'); label.textContent = String(book.content_type || 'KARYA').replaceAll('_',' ').toUpperCase();
         const name = document.createElement('b'); name.textContent = book.title.toUpperCase();
