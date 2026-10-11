@@ -41,6 +41,10 @@ jobs:
           test "$(grep -o "name:'" website/connector-manager.js | wc -l)" -eq 31
           grep -q 'Lihat kebutuhan dan langkah konfigurasi' website/connector-manager.js
           grep -q 'noopener noreferrer' website/connector-manager.js
+          grep -q 'woocommerce-connect' website/connector-manager.js
+          grep -q 'wooConnectForm' website/connector-manager.html
+          test -s supabase/functions/woocommerce-connect/index.ts
+          test -s supabase/migrations/202610110002_narativa_connector_connections.sql
       - name: Upload website artifact
         uses: actions/upload-pages-artifact@v3
         with:
