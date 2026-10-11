@@ -35,6 +35,11 @@ jobs:
           test -s website/experience.css
           test -s website/vendor/supabase.js
           node --check website/connector-manager.js
+          node --check website/learning.js
+          grep -q 'id="learningContext"' website/learning.html
+          grep -q 'id="masteryCheck"' website/learning.html
+          grep -q 'function contextualPlan' website/learning.js
+          grep -q 'learningSourceLinks' website/learning.js
           grep -q 'connector-manager.js' website/connector-manager.html
           grep -q 'experience.css' website/connector-manager.html
           grep -q 'vendorResults' website/connector-manager.html
