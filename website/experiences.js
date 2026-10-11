@@ -332,7 +332,11 @@
             rights_metadata:{ owner_name:$('rightsOwner').value.trim(), license:$('rightsLicense').value, ai_processing_allowed:$('aiPermission').checked },
             metadata:{ original_name:file.name, mime_type:file.type || 'application/octet-stream', size_bytes:file.size, storage_bucket:'narativa-assets', visibility:'private' }
           });
-          if (recordError) throw recordError;
+          if (recordError) {
+            // Best-effort cleanup prevents a private Storage object being orphaned if metadata fails.
+            await db.storage.from('narativa-assets').remove([path]).catch(() => {});
+            throw recordError;
+          }
           uploaded++;
         }
         $('assetUpload').value = '';
