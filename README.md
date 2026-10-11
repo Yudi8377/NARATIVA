@@ -16,7 +16,7 @@ NARATIVA is a creative-work universe: one creator identity and canonical asset c
 
 - Hatchable deployment: [NARATIVA v5](https://narativa-one-story.hatchable.site), deployed with the adaptive experience pages. **Hatchable visibility is still Personal/Private**, so anonymous visitors still encounter its sign-in wall until the owner changes that setting.
 - Public source repository: [Yudi8377/NARATIVA](https://github.com/Yudi8377/NARATIVA).
-- Static site deployment workflow: [GitHub Actions Pages workflow](https://github.com/Yudi8377/NARATIVA/actions/workflows/pages.yml). The GitHub Pages URL must be confirmed by a successful workflow run before it is advertised as live.
+- **Public website live:** https://yudi8377.github.io/NARATIVA/ — the GitHub Pages deployment workflow completed successfully and all role-specific pages/assets returned HTTP 200 in a live-origin smoke test.
 - Backend: Supabase project `hdsqwkydgruyfbqqwhdk`.
 - Collective Intelligence endpoint: `collective-orchestrator` v1 with JWT verification.
 - The Creator Studio scene planner and new role-specific local workspaces are prototypes; local drafts/catalogs remain in the browser and are not cloud-synced.
@@ -31,7 +31,7 @@ NARATIVA is a creative-work universe: one creator identity and canonical asset c
 - `website/admin.html` — admin-console shell and governance checklist. Privileged actions are intentionally disabled until server-side role enforcement exists.
 - `website/experience.css` and `website/experiences.js` — shared responsive visual system and interactions for the role-specific spaces.
 
-See [Adaptive Experiences Architecture](docs/ADAPTIVE-EXPERIENCES.md) for the UI contracts and explicit release limitations.
+See [Adaptive Experiences Architecture](docs/ADAPTIVE-EXPERIENCES.md) for the UI contracts and explicit release limitations. Public sitemap: https://yudi8377.github.io/NARATIVA/sitemap.xml.
 
 ## Collective Intelligence foundation
 
