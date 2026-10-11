@@ -95,3 +95,15 @@
 .x-source-link{margin:0 0 18px;display:inline-flex}
 .x-source-link[hidden]{display:none}
 @media(max-width:700px){.x-catalog-count{font-size:11px}.x-story-card .x-story-author{min-height:0}.x-reader-details{font-size:11px}}
+
+/* Reader taxonomy and locally stored text reader */
+.x-reader-taxonomy{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0 18px}
+.x-reader-taxonomy label{display:grid;gap:7px;color:#aeb9c5;font-size:11px;letter-spacing:.06em;text-transform:uppercase;min-width:min(240px,100%)}
+.x-reader-taxonomy select{width:100%;border:1px solid #ffffff20;border-radius:8px;background:#151d27;color:#f2f4f6;padding:11px 13px;font:inherit;letter-spacing:normal;text-transform:none}
+.x-local-reader{margin:18px 0 22px}
+.x-local-reader[hidden]{display:none}
+.x-local-reader-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;padding:10px 0;background:#10151df2;z-index:2}
+.x-local-reader-toolbar span{font-size:11px;color:#c3ccd6;text-align:center}
+.x-local-reader-toolbar button:disabled{opacity:.35;cursor:not-allowed}
+.x-reader-content{white-space:pre-wrap;overflow-wrap:anywhere;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.95;letter-spacing:.01em;color:#e6e0d5;background:#171c22;border:1px solid #ffffff12;border-radius:10px;padding:clamp(16px,4vw,34px);max-height:58vh;overflow:auto;scroll-behavior:smooth}
+@media(max-width:600px){.x-reader-taxonomy{display:grid;grid-template-columns:1fr}.x-local-reader-toolbar{gap:6px}.x-local-reader-toolbar .x-button{padding:9px 10px;font-size:11px}.x-reader-content{font-size:15px;line-height:1.85}}
