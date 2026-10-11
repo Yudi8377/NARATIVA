@@ -74,7 +74,8 @@
           <div><label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="nama@contoh.id"></div>
           <div><label for="authPassword">Kata sandi (minimal 8 karakter)</label><input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="Kata sandi"></div>
           <div class="collective-actions"><button class="button primary" type="button" id="signInBtn">Masuk</button><button class="button secondary" type="button" id="signUpBtn">Buat akun</button></div>
-          <p>Autentikasi menggunakan Supabase. Jika konfirmasi email diaktifkan, periksa kotak masuk sebelum masuk. Jangan unggah naskah privat sebagai pengetahuan jaringan.</p>
+          <button class="button secondary" type="button" id="resendConfirmationBtn">Kirim ulang email konfirmasi</button>
+          <p>Jika muncul “Email not confirmed”, masukkan email yang digunakan saat mendaftar lalu kirim ulang konfirmasi. Periksa Kotak Masuk dan Spam. Jangan unggah naskah privat sebagai pengetahuan jaringan.</p>
         </div>
         <div id="collectiveWorkspace" hidden>
           <div class="collective-userbar"><span>AKUN AKTIF · <strong id="collectiveUser"></strong></span><button class="button secondary" type="button" id="signOutBtn">Keluar</button></div>
