@@ -248,7 +248,7 @@
       if (!sessionData.session) { setNotice('Masuk terlebih dahulu agar pipeline cerita dapat dijalankan.', 'error'); return; }
       const button = $('makeOutline'); button.disabled = true; button.textContent = 'Memetakan adegan…';
       try {
-        const { data, error } = await db.functions.invoke('story-pipeline', { body: { title:$('workTitle').value.trim(), manuscript:raw, language:'id', targetFormat:$('workFormat').value } });
+        const { data, error } = await db.functions.invoke('story-pipeline', { body: { title:$('workTitle').value.trim(), manuscript:raw, language:'id', targetFormat:$('workFormat').value, manuscript_processing_consent:true } });
         if (error) { let detail = error.message || 'Pipeline gagal.'; try { if (error.context?.json) { const body = await error.context.json(); detail = body.message || body.error || detail; } } catch (_) {} throw new Error(detail); }
         if (data?.error) throw new Error(data.message || data.error);
         lastStoryboard = data;
