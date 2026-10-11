@@ -533,6 +533,9 @@
     const etsyStatus = $('etsyConnectionStatus');
     function setEtsyStatus(message, kind) {
       if (etsyStatus) { etsyStatus.textContent = 'Status Etsy: ' + message; etsyStatus.dataset.kind = kind || 'info'; }
+      const connected = kind === 'success' && message.startsWith('terhubung');
+      if ($('connectedVendorCount')) $('connectedVendorCount').textContent = connected ? '1' : '0';
+      if ($('etsyVendorCardStatus')) $('etsyVendorCardStatus').textContent = connected ? 'Terhubung · OAuth resmi' : (kind === 'error' ? 'Belum terhubung · perlu konfigurasi' : 'Belum terhubung · Marketplace');
     }
     async function refreshEtsyStatus() {
       if (!etsyStatus) return;
