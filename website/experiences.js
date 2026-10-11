@@ -105,6 +105,8 @@
     const db = window.supabase?.createClient?.('https://hdsqwkydgruyfbqqwhdk.supabase.co', 'sb_publishable_m24u_7V16Y-bq_B_YydL-w_dw_4bOb8');
     let signedInUser = null;
     let cloudBooks = [];
+    let activeBookId = null;
+    let lastStoryboard = null;
     const slugify = value => value.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,64) || 'karya';
     const contentType = value => ({writing:'novel',comic:'comic',audio:'audio_drama',photo:'other',illustration:'other',video:'other','3d':'other',other:'other'}[value] || 'other');
     function setNotice(message, kind) {
@@ -146,6 +148,7 @@
             const { data, error } = await db.from('book_versions').select('canonical_content').eq('book_id',book.id).order('version_number',{ascending:false}).limit(1);
             if (error) throw error;
             const content = data?.[0]?.canonical_content || {};
+            activeBookId = book.id;
             $('workTitle').value = book.title;
             $('workText').value = content.body || book.description || '';
             setMode(content.mode || (book.content_type === 'comic' ? 'comic' : 'writing'));
@@ -202,7 +205,7 @@
       const metadata = { mode, format, visibility, rightsOwner:$('rightsOwner').value.trim(), license:$('rightsLicense').value, aiPermission:$('aiPermission').checked, savedAt:new Date().toISOString() };
       const rightsMetadata = { owner_name:metadata.rightsOwner, license:metadata.license, ai_processing_allowed:metadata.aiPermission, provenance:'creator-studio' };
       const bookFields = { owner_id:signedInUser.id, slug, title, description:body.slice(0,1200), language_code:'id', content_type:contentType(format), status, rights_metadata:rightsMetadata, metadata };
-      let book = cloudBooks.find(b => b.slug === slug);
+      let book = cloudBooks.find(b => b.id === activeBookId) || cloudBooks.find(b => b.slug === slug);
       if (book) {
         const { data, error } = await db.from('books').update(bookFields).eq('id',book.id).select('id,slug,title,status').single();
         if (error) throw error;
@@ -212,10 +215,11 @@
         if (error) throw error;
         book = data;
       }
+      activeBookId = book.id;
       const { data: versions, error: versionError } = await db.from('book_versions').select('version_number').eq('book_id',book.id).order('version_number',{ascending:false}).limit(1);
       if (versionError) throw versionError;
       const versionNumber = (versions?.[0]?.version_number || 0) + 1;
-      const canonical = { body, mode, format, visibility, rightsOwner:metadata.rightsOwner, license:metadata.license, aiPermission:metadata.aiPermission, savedAt:metadata.savedAt };
+      const canonical = { body, mode, format, visibility, rightsOwner:metadata.rightsOwner, license:metadata.license, aiPermission:metadata.aiPermission, savedAt:metadata.savedAt, storyboard:lastStoryboard?.storyboard || [], productionPlan:lastStoryboard?.productionPlan || [] };
       const { error: saveVersionError } = await db.from('book_versions').insert({ book_id:book.id, version_number:versionNumber, canonical_content:canonical, change_summary:status === 'published' ? 'Kreator menerbitkan karya' : 'Kreator menyimpan versi karya', created_by:signedInUser.id });
       if (saveVersionError) throw saveVersionError;
       $('workVisibility').value = visibility;
@@ -229,26 +233,38 @@
       if (!window.confirm('Terbitkan karya ini ke Ruang Pembaca publik? Pastikan Anda memiliki hak atas naskah dan asetnya.')) return;
       try { await persistWork('published'); } catch (e) { setNotice('Publikasi gagal: ' + (e.message || 'periksa koneksi dan akses akun.'), 'error'); }
     });
-    function outline() {
+    async function outline() {
       const raw = $('workText').value.trim();
-      if (raw.length < 40) { setNotice('Tambahkan materi lebih panjang agar outline awal bisa disusun.', 'error'); return; }
-      const sentences = raw.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [raw];
-      const chunks = [];
-      const count = Math.min(5, Math.max(2, sentences.length));
-      for (let i = 0; i < count; i++) {
-        const start = Math.floor(i * sentences.length / count);
-        const end = Math.floor((i + 1) * sentences.length / count);
-        const text = sentences.slice(start, Math.max(start + 1, end)).join(' ').trim();
-        if (text) chunks.push(text);
-      }
-      const result = $('outlineResult'); result.replaceChildren();
-      chunks.forEach((text, i) => { const article = document.createElement('article'); const h = document.createElement('h4'); h.textContent = (mode === 'comic' ? 'PANEL / BEAT ' : 'BAGIAN ') + String(i + 1).padStart(2, '0'); const p = document.createElement('p'); p.textContent = text; article.append(h,p); result.appendChild(article); });
-      result.hidden = false;
-      setNotice('Outline dibuat oleh aturan lokal sederhana, bukan hasil model AI.');
+      if (raw.length < 80) { setNotice('Tambahkan minimal 80 karakter agar pipeline dapat memetakan adegan.', 'error'); return; }
+      if (!db) { setNotice('Pipeline belum siap karena library Supabase belum termuat.', 'error'); return; }
+      const { data: sessionData } = await db.auth.getSession();
+      if (!sessionData.session) { setNotice('Masuk terlebih dahulu agar pipeline cerita dapat dijalankan.', 'error'); return; }
+      const button = $('makeOutline'); button.disabled = true; button.textContent = 'Memetakan adegan…';
+      try {
+        const { data, error } = await db.functions.invoke('story-pipeline', { body: { title:$('workTitle').value.trim(), manuscript:raw, language:'id', targetFormat:$('workFormat').value } });
+        if (error) { let detail = error.message || 'Pipeline gagal.'; try { if (error.context?.json) { const body = await error.context.json(); detail = body.message || body.error || detail; } } catch (_) {} throw new Error(detail); }
+        if (data?.error) throw new Error(data.message || data.error);
+        lastStoryboard = data;
+        const result = $('outlineResult'); result.replaceChildren();
+        (data.storyboard || []).forEach(scene => {
+          const article = document.createElement('article');
+          const h = document.createElement('h4'); h.textContent = String(scene.sceneNumber).padStart(2,'0') + ' · ' + scene.workingTitle;
+          const p = document.createElement('p'); p.textContent = scene.sourceExcerpt || '';
+          const small = document.createElement('small'); small.textContent = scene.visualDirection || 'Arahan visual menunggu tinjauan kreatif.';
+          article.append(h,p,small); result.appendChild(article);
+        });
+        const plan = document.createElement('article');
+        const ph = document.createElement('h4'); ph.textContent = 'LANGKAH PRODUKSI'; plan.appendChild(ph);
+        const list = document.createElement('ul');
+        (data.productionPlan || []).forEach(step => { const li = document.createElement('li'); li.textContent = step.label + ' — ' + step.status; list.appendChild(li); });
+        plan.appendChild(list); result.appendChild(plan); result.hidden = false;
+        setNotice((data.notice || 'Storyboard awal berhasil dibuat.') + ' Simpan karya untuk merekam hasil pipeline pada versi berikutnya.', 'success');
+      } catch (e) { setNotice('Pipeline gagal: ' + (e.message || 'periksa koneksi dan sesi akun.'), 'error'); }
+      finally { button.disabled = false; button.textContent = 'Susun storyboard'; }
     }
     $('makeOutline').addEventListener('click', outline);
-    $('newComic').addEventListener('click', () => { setMode('comic'); $('workTitle').value = 'Komik baru'; $('workText').value = ''; $('workFormat').value = 'comic'; $('create').scrollIntoView({behavior:'smooth'}); $('workText').focus(); });
-    $('newWriting').addEventListener('click', () => { setMode('writing'); $('workTitle').value = 'Naskah baru'; $('workText').value = ''; $('workFormat').value = 'writing'; $('create').scrollIntoView({behavior:'smooth'}); $('workText').focus(); });
+    $('newComic').addEventListener('click', () => { activeBookId = null; lastStoryboard = null; setMode('comic'); $('workTitle').value = 'Komik baru'; $('workText').value = ''; $('workFormat').value = 'comic'; $('create').scrollIntoView({behavior:'smooth'}); $('workText').focus(); });
+    $('newWriting').addEventListener('click', () => { activeBookId = null; lastStoryboard = null; setMode('writing'); $('workTitle').value = 'Naskah baru'; $('workText').value = ''; $('workFormat').value = 'writing'; $('create').scrollIntoView({behavior:'smooth'}); $('workText').focus(); });
     $('assetUpload').addEventListener('change', () => {
       const box = $('assetPreview'); box.replaceChildren();
       const files = Array.from($('assetUpload').files || []);
