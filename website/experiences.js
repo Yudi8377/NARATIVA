@@ -17,6 +17,7 @@
     const catalogById = new Map(catalog.map(item => [item.id, item]));
     const cloudIds = new Set();
     let active = 'rain';
+    let activeItem = null;
     let readerPages = [];
     let readerPageIndex = 0;
     const readerPageSize = 9000;
@@ -26,6 +27,7 @@
     function openStory(id) {
       active = stories[id] || catalogById.has(id) || cloudIds.has(id) ? id : 'rain';
       const item = catalogById.get(active);
+      activeItem = item || null;
       const story = stories[active] || {title:item?.title || 'Karya NARATIVA',body:item?.description || 'Karya terbit dari katalog NARATIVA.'};
       $('readerTitle').textContent = story.title;
       $('readerBody').textContent = story.body;
@@ -42,26 +44,39 @@
         'Hak penggunaan: ' + item.rights
       ].join('  |  ') : (cloudIds.has(active) ? 'Karya kreator NARATIVA · baca versi terbit' : 'Cerita demo orisinal NARATIVA · contoh pengalaman membaca');
       const source = $('readerSource');
-      const sourceUrl = item?.contentUrl ? null : (item?.read || item?.source || null);
+      const sourceUrl = (item?.contentUrl || item?.localPages || item?.localPlayerUrl) ? null : (item?.read || item?.source || null);
       source.hidden = !sourceUrl;
       if (sourceUrl) {
         source.href = sourceUrl;
         source.textContent = item?.sourceLabel || (item?.category === 'komik' ? 'Buka arsip komik ↗' : 'Baca sumber asli ↗');
       }
-      $('readerNotice').textContent = item ? 'Tautan menuju arsip sumber. Status hak pada halaman sumber perlu diperiksa sebelum mengunduh atau menerbitkan ulang.' : (cloudIds.has(active) ? 'Karya terbit dari katalog NARATIVA. Progres baca disimpan di perangkat.' : 'Konten demo orisinal. Riwayat baca hanya disimpan di perangkat ini.');
+      $('readerNotice').textContent = (item?.contentUrl || item?.localPages || item?.localPlayerUrl) ? 'Karya tersedia secara lokal di NARATIVA. Periksa catatan lisensi sebelum menggunakan ulang.' : item ? 'Tautan menuju arsip sumber. Status hak pada halaman sumber perlu diperiksa sebelum mengunduh atau menerbitkan ulang.' : (cloudIds.has(active) ? 'Karya terbit dari katalog NARATIVA. Progres baca disimpan di perangkat.' : 'Konten demo orisinal. Riwayat baca hanya disimpan di perangkat ini.');
       $('nextStory').hidden = !!item || cloudIds.has(active);
       modal.hidden = false;
       $('closeReader').focus();
       safeStore.set('narativa-reader-last', { id: active, progress: 0, page: 0, at: new Date().toISOString() });
-      if (item?.contentUrl) loadLocalBook(item);
+      if (item?.contentUrl || item?.localPages || item?.localPlayerUrl) loadLocalBook(item);
     }
 
     async function loadLocalBook(item) {
       const localPanel = $('readerLocalPanel');
       $('readerBody').hidden = true;
       localPanel.hidden = false;
-      $('readerContent').textContent = 'Memuat naskah lokal…';
+      $('readerContent').replaceChildren();
+      $('readerContent').textContent = 'Memuat konten lokal…';
       try {
+        if (item.localPlayerUrl) {
+          const frame = document.createElement('iframe');
+          frame.src = item.localPlayerUrl; frame.title = item.title; frame.loading = 'lazy';
+          frame.style.cssText = 'display:block;width:100%;height:min(70vh,620px);border:0;border-radius:10px;background:#10151d';
+          $('readerContent').replaceChildren(frame);
+          $('readerPageStatus').textContent = 'Animasi lokal · lima adegan';
+          $('readerPrevPage').disabled = true; $('readerNextPage').disabled = true;
+          return;
+        }
+        if (Array.isArray(item.localPages) && item.localPages.length) {
+          readerPages = item.localPages.slice(); readerPageIndex = 0; renderLocalPage(); return;
+        }
         const response = await fetch(item.contentUrl);
         if (!response.ok) throw new Error('HTTP ' + response.status);
         const text = await response.text();
@@ -81,8 +96,16 @@
       }
     }
     function renderLocalPage() {
-      $('readerContent').textContent = readerPages[readerPageIndex] || '';
-      $('readerPageStatus').textContent = 'Bagian ' + (readerPageIndex + 1) + ' dari ' + readerPages.length;
+      if (activeItem?.localPages) {
+        const img = document.createElement('img');
+        img.src = activeItem.localPages[readerPageIndex]; img.alt = activeItem.title + ' — halaman ' + (readerPageIndex + 1);
+        img.loading = 'eager'; img.style.cssText = 'display:block;width:min(100%,640px);height:auto;margin:0 auto;border-radius:8px;background:#f5f1e8';
+        $('readerContent').replaceChildren(img);
+        $('readerPageStatus').textContent = 'Halaman ' + (readerPageIndex + 1) + ' dari ' + readerPages.length;
+      } else {
+        $('readerContent').textContent = readerPages[readerPageIndex] || '';
+        $('readerPageStatus').textContent = 'Bagian ' + (readerPageIndex + 1) + ' dari ' + readerPages.length;
+      }
       $('readerPrevPage').disabled = readerPageIndex <= 0;
       $('readerNextPage').disabled = readerPageIndex >= readerPages.length - 1;
       safeStore.set('narativa-reader-last', {id:active,progress:readerPages.length ? Math.round((readerPageIndex + 1) / readerPages.length * 100) : 0,page:readerPageIndex,at:new Date().toISOString()});
@@ -101,6 +124,8 @@
         const genreText = (item.genre + ' ' + item.title + ' ' + item.description).toLocaleLowerCase('id');
         const tags = [];
         if (item.category === 'fantasi' || /fantasi|fairy|wonderland|oz|mars|goblin/.test(genreText)) tags.push('fantasi');
+        if (/aksi|action|petualangan|adventure/.test(genreText)) tags.push('action','petualangan');
+        if (item.category === 'manga' || item.category === 'anime') tags.push('sci-fi','petualangan');
         if (item.category === 'misteri' || /misteri|mystery|detectif|detektif|investigasi|sherlock|pembunuhan|ruang terkunci/.test(genreText)) tags.push('detektif','thriller');
         if (/horor|horror|gotik|gothic|nightmare|frankenstein|invisible man|jekyll|poe/.test(genreText)) tags.push('horor','gotik');
         if (/romantis|romansa|romance|phantom of the opera|love|cinta/.test(genreText)) tags.push('romantis');
@@ -111,7 +136,7 @@
         if (/satire/.test(genreText)) tags.push('satire');
         if (/sejarah|historical/.test(genreText)) tags.push('sejarah');
         card.dataset.tags = [...new Set(tags)].join(' ');
-        const type = item.category === 'komik' ? 'komik' : (/kumpulan|antologi/.test(item.format.toLocaleLowerCase('id')) ? 'antologi' : 'novel');
+        const type = ['komik','manga','manhwa','anime'].includes(item.category) ? item.category : (/cerpen/.test(item.format.toLocaleLowerCase('id')) ? 'cerpen' : (/kumpulan|antologi/.test(item.format.toLocaleLowerCase('id')) ? 'antologi' : 'novel'));
         card.dataset.type = type;
         card.dataset.search = [item.title,item.author,item.genre,item.format,item.year,item.language].join(' ').toLocaleLowerCase('id');
         const cover = document.createElement('div');
@@ -128,11 +153,11 @@
         const heading = document.createElement('h3'); heading.textContent = item.title;
         const description = document.createElement('p'); description.textContent = item.description;
         const author = document.createElement('small'); author.className = 'x-story-author'; author.textContent = item.author + ' · ' + item.genre;
-        const button = document.createElement('button'); button.type = 'button'; button.className = 'x-text-button'; button.dataset.read = item.id; button.textContent = item.contentUrl ? 'Baca di NARATIVA →' : 'Detail & sumber ↗';
+        const button = document.createElement('button'); button.type = 'button'; button.className = 'x-text-button'; button.dataset.read = item.id; button.textContent = (item.contentUrl || item.localPages || item.localPlayerUrl) ? 'Baca di NARATIVA →' : 'Detail & sumber ↗';
         card.append(cover,meta,heading,description,author,button);
         grid.appendChild(card);
       });
-      $('catalogCount').textContent = catalog.length + ' karya contoh · 20 Komik · 20 Fantasi · 20 Misteri. Tiga buku klasik tersedia sebagai teks lokal yang dibaca langsung di NARATIVA.';
+      $('catalogCount').textContent = catalog.length + ' karya di katalog · 20 komik arsip, 20 fantasi, 20 misteri, plus 3 karya lokal original (komik, manga, anime).';
     }
 
     $('storyGrid').addEventListener('click', event => {
