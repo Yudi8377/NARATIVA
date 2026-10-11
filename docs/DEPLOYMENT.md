@@ -22,6 +22,7 @@
 - `website/spaces.html`: role and workspace selector.
 - `website/reader.html`: reader discovery, search/genre filters, reading preview, local saved list.
 - `website/creator.html`: writing and comic workspaces, authenticated cloud work/version saving, explicit publish action, private asset upload, and rights/provenance fields.
+- `website/learning.html`: Creative Learning Room with local photo analysis, browser adjustment preview, manual Photoshop/Lightroom/CorelDRAW tutorials, and browser text-to-speech.
 - `website/commerce.html`: local catalog editor and honest vendor readiness statuses.
 - `website/admin.html`: governance shell with privileged actions disabled until server-side authorization is implemented.
 - `website/experience.css`, `website/experiences.js`: responsive styles and local browser interactions.
@@ -41,7 +42,8 @@
 ## Post-deployment smoke tests
 
 - Open the chosen public origin in a private/incognito window; confirm no hosting sign-in wall.
-- Check `/`, `/spaces.html`, `/reader.html`, `/creator.html`, `/commerce.html`, and `/admin.html`.
+- Check `/`, `/spaces.html`, `/reader.html`, `/creator.html`, `/learning.html`, `/commerce.html`, and `/admin.html`.
+- Learning Room: upload a small photo and verify local analysis/preview; try all tutorial paths, previous/next, speech, reset, and JPG download. Confirm no photo is sent to a server.
 - Verify mobile layout, keyboard navigation, reduced motion, page titles, and browser console.
 - Reader: filter stories, open/close reading modal, save a story, and verify the saved list is local to that browser.
 - Creator: switch between writing/comic modes, verify storyboard submission is blocked until processing consent is checked, save a version, reopen it, upload a small test file, and confirm the asset metadata is visible only to its owner.
