@@ -42,6 +42,9 @@ jobs:
           test -s website/library/comics/kota-di-atas-awan/page-06.svg
           test -s website/library/manga/komet-terakhir/page-01.svg
           test -s website/library/manga/komet-terakhir/page-04.svg
+          test -s website/library/manhwa/senja-di-stasiun/page-01.svg
+          test -s website/library/manhwa/senja-di-stasiun/page-04.svg
+          grep -q 'local-manhwa-station' website/reader-catalog.js
           test -s website/library/anime/satu-bintang-lagi.html
           test -s website/library/importer.html
           grep -q 'local-sky-comic' website/reader-catalog.js
