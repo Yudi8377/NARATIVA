@@ -126,6 +126,161 @@
       setNotice(mode === 'comic' ? 'Workspace komik siap. Simpan untuk menyimpan versi karya ke akun cloud.' : 'Workspace naskah siap. Simpan untuk menyimpan versi karya ke akun cloud.');
     }
     document.querySelectorAll('[data-studio]').forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.studio)));
+    // Creator editor: Markdown toolbar, local undo/redo, manuscript export and story wizard.
+    const editor = $('workText');
+    let editHistory = [editor.value];
+    let editHistoryIndex = 0;
+    let historyTimer = null;
+    function rememberEdit() {
+      if (editHistory[editHistoryIndex] !== editor.value) {
+        editHistory = editHistory.slice(0, editHistoryIndex + 1);
+        editHistory.push(editor.value);
+        if (editHistory.length > 100) editHistory.shift();
+        editHistoryIndex = editHistory.length - 1;
+      }
+      updateEditorCount();
+    }
+    function updateEditorCount() {
+      const text = editor.value;
+      const words = text.trim() ? text.trim().split(/\\s+/u).length : 0;
+      $('editorWordCount').textContent = words.toLocaleString('id-ID') + ' kata · ' + text.length.toLocaleString('id-ID') + ' karakter';
+    }
+    function applyEdit(next, start, end) {
+      editor.setRangeText(next, start, end, 'select');
+      editor.focus();
+      rememberEdit();
+      lastStoryboard = null;
+    }
+    function formatSelection(format) {
+      const start = editor.selectionStart, end = editor.selectionEnd;
+      const selected = editor.value.slice(start, end);
+      if (format === 'divider') { applyEdit((start && editor.value[start-1] !== '\\n' ? '\\n' : '') + '\\n---\\n', start, end); return; }
+      if (['ul','ol','quote','heading'].includes(format)) {
+        const lineStart = editor.value.lastIndexOf('\\n', Math.max(0,start-1)) + 1;
+        const lineEndRaw = editor.value.indexOf('\\n', end);
+        const lineEnd = lineEndRaw < 0 ? editor.value.length : lineEndRaw;
+        const block = editor.value.slice(lineStart,lineEnd);
+        const prefix = format === 'ul' ? '- ' : format === 'ol' ? '1. ' : format === 'quote' ? '> ' : '## ';
+        const changed = block.split('\\n').map((line,i) => {
+          const clean = line.replace(/^(?:[-*+]\\s+|\\d+\\.\\s+|>\\s+|#{1,6}\\s+)/,'');
+          return prefix + clean;
+        }).join('\\n');
+        applyEdit(changed,lineStart,lineEnd); editor.setSelectionRange(lineStart,lineStart+changed.length); return;
+      }
+      const marker = format === 'bold' ? '**' : '*';
+      if (selected.startsWith(marker) && selected.endsWith(marker) && selected.length >= marker.length*2) {
+        applyEdit(selected.slice(marker.length,-marker.length),start,end);
+        editor.setSelectionRange(start,start+selected.length-marker.length*2);
+      } else {
+        applyEdit(marker + selected + marker,start,end);
+        editor.setSelectionRange(start+marker.length,start+marker.length+selected.length);
+      }
+    }
+    document.querySelectorAll('[data-format]').forEach(button => button.addEventListener('click', () => formatSelection(button.dataset.format)));
+    editor.addEventListener('input', () => {
+      clearTimeout(historyTimer);
+      historyTimer = setTimeout(rememberEdit, 120);
+      updateEditorCount();
+      lastStoryboard = null;
+    });
+    $('undoEdit').addEventListener('click', () => {
+      clearTimeout(historyTimer);
+      if (editHistoryIndex > 0) { editHistoryIndex--; editor.value = editHistory[editHistoryIndex]; editor.focus(); updateEditorCount(); lastStoryboard = null; }
+    });
+    $('redoEdit').addEventListener('click', () => {
+      clearTimeout(historyTimer);
+      if (editHistoryIndex < editHistory.length-1) { editHistoryIndex++; editor.value = editHistory[editHistoryIndex]; editor.focus(); updateEditorCount(); lastStoryboard = null; }
+    });
+    editor.addEventListener('keydown', event => {
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'b') { event.preventDefault(); formatSelection('bold'); }
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'i') { event.preventDefault(); formatSelection('italic'); }
+    });
+    $('findReplaceToggle').addEventListener('click', () => { $('findReplacePanel').hidden = !$('findReplacePanel').hidden; if (!$('findReplacePanel').hidden) $('findText').focus(); });
+    $('closeFindReplace').addEventListener('click', () => { $('findReplacePanel').hidden = true; });
+    $('applyReplace').addEventListener('click', () => {
+      const find = $('findText').value;
+      if (!find) { setNotice('Masukkan teks yang ingin dicari.', 'error'); return; }
+      const source = editor.value;
+      const escaped = find.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\    document.querySelectorAll('[data-studio]').forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.studio)));');
+      const re = new RegExp(escaped, 'gi');
+      const matches = source.match(re)?.length || 0;
+      if (!matches) { setNotice('Teks tidak ditemukan.', 'info'); return; }
+      editor.value = source.replace(re, $('replaceText').value);
+      rememberEdit(); lastStoryboard = null;
+      setNotice(matches + ' kemunculan berhasil diganti. Periksa kembali hasilnya.', 'success');
+    });
+    $('toggleFocus').addEventListener('click', () => {
+      $('create').classList.toggle('x-focus-mode');
+      $('toggleFocus').textContent = $('create').classList.contains('x-focus-mode') ? '↙ Keluar fokus' : '⛶';
+    });
+    $('downloadManuscript').addEventListener('click', () => {
+      const title = $('workTitle').value.trim() || 'naskah-narativa';
+      const blob = new Blob(['# ' + title + '\\n\\n' + editor.value + '\\n'], {type:'text/markdown;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a'); link.href = url; link.download = slugify(title) + '.md'; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setNotice('Naskah Markdown diunduh ke perangkat ini.', 'success');
+    });
+    $('printManuscript').addEventListener('click', () => {
+      const popup = window.open('', '_blank', 'noopener,noreferrer,width=900,height=700');
+      if (!popup) { setNotice('Jendela cetak diblokir browser. Izinkan pop-up untuk mencetak naskah.', 'error'); return; }
+      const safeTitle = $('workTitle').value.trim() || 'Naskah NARATIVA';
+      const escapedTitle = safeTitle.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      const escapedBody = editor.value.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+      popup.document.write('<!doctype html><html lang="id"><head><meta charset="utf-8"><title>'+escapedTitle+'</title><style>body{font:12pt/1.7 Georgia,serif;max-width:760px;margin:48px auto;padding:0 24px;white-space:pre-wrap}h1{font-size:24pt} @media print{body{margin:0 auto}}</style></head><body><h1>'+escapedTitle+'</h1><main>'+escapedBody+'</main><script>window.onload=()=>window.print()<\\/script></body></html>');
+      popup.document.close();
+    });
+    const wizardModal = $('storyWizardModal');
+    let wizardDraft = '';
+    function closeWizard() { wizardModal.hidden = true; $('openStoryWizard').focus(); }
+    $('openStoryWizard').addEventListener('click', () => {
+      $('wizardIdea').value = editor.value.trim().slice(0,500);
+      wizardModal.hidden = false; $('wizardIdea').focus();
+    });
+    $('closeStoryWizard').addEventListener('click', closeWizard);
+    $('cancelStoryWizard').addEventListener('click', closeWizard);
+    wizardModal.addEventListener('click', e => { if (e.target === wizardModal) closeWizard(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !wizardModal.hidden) closeWizard(); });
+    $('generateStoryOutline').addEventListener('click', () => {
+      const idea = $('wizardIdea').value.trim();
+      if (!idea) { $('wizardIdea').focus(); $('wizardResultSummary').textContent = 'Isi premis terlebih dahulu.'; $('wizardResult').hidden = false; return; }
+      const genre = $('wizardGenre').value, audience = $('wizardAudience').value, tone = $('wizardTone').value;
+      const hero = $('wizardHero').value.trim() || 'tokoh utama';
+      const goal = $('wizardGoal').value.trim() || 'menemukan jawaban atas persoalan yang mengusik hidupnya';
+      const obstacle = $('wizardObstacle').value.trim() || 'rahasia yang mengubah pemahamannya tentang dunia';
+      const count = Number($('wizardLength').value);
+      const stages = [
+        ['Pemantik','Sebuah kejadian ganjil mengusik keseimbangan hidup.','Perkenalkan dunia, kebutuhan tokoh, dan pertanyaan yang mendorong cerita.'],
+        ['Panggilan','Tokoh memutuskan mencari tahu apa yang sebenarnya terjadi.','Tunjukkan tujuan yang jelas dan alasan pribadi untuk bertindak.'],
+        ['Ujian pertama','Petunjuk awal membawa tokoh pada masalah yang lebih besar.','Hadirkan kegagalan kecil, sekutu, dan konsekuensi pilihan.'],
+        ['Titik balik','Fakta baru membuat tujuan awal terasa tidak sesederhana dugaan.','Ungkap rahasia atau konflik batin yang mengubah arah cerita.'],
+        ['Tekanan meningkat','Waktu, hubungan, atau risiko membuat pilihan makin mahal.','Bangun ketegangan dan paksa tokoh mengorbankan sesuatu.'],
+        ['Krisis','Tokoh kehilangan pegangan dan harus menilai ulang keyakinannya.','Buat keputusan terberat muncul dari kelemahan tokoh sendiri.'],
+        ['Klimaks','Tokoh menghadapi sumber konflik secara langsung.','Satukan tujuan, risiko, dan perubahan karakter dalam tindakan.'],
+        ['Gema akhir','Keputusan tokoh meninggalkan dunia yang berbeda.','Tutup konflik utama dan sisakan gema emosional yang bermakna.']
+      ];
+      const lines = ['# ' + ($('workTitle').value.trim() || 'Judul sementara'), '', '**Genre:** ' + genre + '  ', '**Pembaca:** ' + audience + '  ', '**Nuansa:** ' + tone, '', '## Premis', idea, '', '## Tokoh utama', hero + ' ingin ' + goal + ', tetapi harus menghadapi ' + obstacle + '.', '', '## Pertanyaan pendorong', 'Apa yang harus dikorbankan ' + hero + ' untuk mencapai tujuannya tanpa kehilangan hal yang paling berarti?', '', '## Kerangka cerita'];
+      stages.slice(0,count).forEach((stage,i) => {
+        lines.push('', '### ' + (i+1) + '. ' + stage[0], stage[1], '', '**Arah pengembangan:** ' + stage[2], '', '**Adegan yang bisa ditulis:**', '- Pilihan konkret yang dibuat tokoh ' + hero + '.', '- Petunjuk atau benturan yang memperumit premis: ' + idea, '- Akibat yang mendorong bagian berikutnya.');
+      });
+      lines.push('', '## Catatan revisi', '- Apakah keinginan tokoh cukup spesifik?', '- Apakah konflik makin sulit dari satu bagian ke bagian berikutnya?', '- Apakah klimaks lahir dari keputusan tokoh, bukan kebetulan?', '- Apakah akhir memberi perubahan yang terasa?', '', '> Draf kerangka ini adalah titik awal. Ubah detail, karakter, dan alur agar menjadi suara kreatif Anda sendiri.');
+      wizardDraft = lines.join('\\n');
+      $('wizardResultSummary').textContent = 'Kerangka ' + count + ' bagian siap. Anda dapat mengganti isi editor atau menambahkannya di akhir naskah.';
+      $('wizardResult').hidden = false;
+    });
+    $('insertStoryReplace').addEventListener('click', () => {
+      if (!wizardDraft) return;
+      editor.value = wizardDraft.slice(0,12000); rememberEdit(); lastStoryboard = null; closeWizard(); $('create').scrollIntoView({behavior:'smooth'}); editor.focus();
+      setNotice('Kerangka cerita dimasukkan ke editor. Tinjau dan kembangkan sebelum disimpan atau diterbitkan.', 'success');
+    });
+    $('insertStoryAppend').addEventListener('click', () => {
+      if (!wizardDraft) return;
+      const spacer = editor.value.trim() ? '\\n\\n' : '';
+      editor.value = (editor.value + spacer + wizardDraft).slice(0,12000); rememberEdit(); lastStoryboard = null; closeWizard(); editor.focus();
+      setNotice('Kerangka ditambahkan ke naskah. Periksa batas 12.000 karakter dan sesuaikan sebelum disimpan.', 'success');
+    });
+    updateEditorCount();
+
 
     function renderCloudProjects() {
       const box = $('cloudProjects');
