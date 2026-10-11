@@ -2,8 +2,15 @@
   const $ = id => document.getElementById(id);
   const params = new URLSearchParams(location.search);
   const workId = params.get('work');
+  const storyId = params.get('story');
   const catalog = Array.isArray(window.NARATIVA_READER_CATALOG) ? window.NARATIVA_READER_CATALOG : [];
-  const work = catalog.find(item => item.id === workId);
+  const demoStories = {
+    rain:{id:'demo-rain',title:'Perpustakaan di Ujung Hujan',author:'NARATIVA Studio · cerita demo',category:'fantasi',genre:'Fantasi · Misteri',emoji:'🌧️',description:'Sebuah buku menyimpan kenangan yang belum pernah terjadi.',demoText:'Di kota yang selalu diguyur hujan, seorang penjaga perpustakaan menemukan buku tanpa judul. Setiap halaman berisi kenangan yang belum pernah terjadi. Pada halaman terakhir, ia melihat namanya sendiri, ditulis dengan tinta yang masih basah.\\n\\nMalam itu, bunyi lonceng terdengar dari lantai yang sudah lama ditutup. Ia membuka buku itu sekali lagi dan menemukan satu kalimat baru: “Jangan biarkan hujan berhenti sebelum fajar.”'},
+    cloud:{id:'demo-cloud',title:'Kota di Atas Awan',author:'NARATIVA Studio · cerita demo',category:'komik',genre:'Fantasi · Petualangan',emoji:'☁️',description:'Seorang kurir menemukan jalan menuju kota yang hilang.',demoText:'Di atas kabut yang tak pernah surut, sebuah kota bergerak mengikuti arah angin. Seorang kurir muda menerima paket tanpa alamat. Satu-satunya petunjuk adalah peta yang berubah setiap kali ia berkedip.\\n\\nKetika ia membuka paket itu, langit berderak seperti kaca. Sebuah tangga cahaya turun dari kota yang selama ini hanya tampak dalam mimpi.'},
+    archive:{id:'demo-archive',title:'Arsip Tengah Malam',author:'NARATIVA Studio · cerita demo',category:'misteri',genre:'Misteri · Detektif',emoji:'🔎',description:'Catatan yang hilang membawa detektif ke sebuah rahasia.',demoText:'Setiap tengah malam, satu berkas baru muncul di ruang arsip yang telah dikunci selama dua puluh tahun. Detektif Mara menemukan bahwa semua berkas itu mencatat kejadian sehari sebelum terjadi.\\n\\nBerkas malam ini hanya berisi foto ruang arsip. Di belakang foto, dengan tulisan tangan Mara sendiri, tertulis: “Jangan masuk setelah pukul dua belas.”'}
+  };
+  let work = catalog.find(item => item.id === workId);
+  if (!work && demoStories[storyId]) work = demoStories[storyId];
   const pageNode = $('bookPage'), turnLayer = $('turnLayer');
   const prevButtons = [$('previous'), $('previousBottom')], nextButtons = [$('next'), $('nextBottom')];
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -44,7 +51,7 @@
     const list = element('ol','contents-list');
     const entries = [];
     if (work.localPages?.length) work.localPages.forEach((_,i)=>entries.push({title:'Halaman ilustrasi '+(i+1),target:2+i}));
-    else if (work.contentUrl) contentPages.forEach((_,i)=>entries.push({title:'Bagian '+(i+1),target:2+i}));
+    else if (work.contentUrl || work.demoText) contentPages.forEach((_,i)=>entries.push({title:'Bagian '+(i+1),target:2+i}));
     else if (work.localPlayerUrl) entries.push({title:'Pemutaran animasi',target:2});
     if (!entries.length) entries.push({title:'Isi karya',target:2});
     entries.forEach(entry => {
@@ -149,7 +156,10 @@
     let interiorPages = [];
     try {
       if(Array.isArray(work.localPages)&&work.localPages.length) interiorPages = makeArtPages();
-      else if(work.contentUrl){
+      else if(work.demoText){
+        contentPages=makeTextPages(work.demoText);
+        interiorPages=contentPages;
+      } else if(work.contentUrl){
         showMessage('Membuka naskah lokal…');
         const response=await fetch(work.contentUrl);
         if(!response.ok)throw new Error('HTTP '+response.status);
