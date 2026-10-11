@@ -37,6 +37,10 @@ jobs:
           node --check website/connector-manager.js
           grep -q 'connector-manager.js' website/connector-manager.html
           grep -q 'experience.css' website/connector-manager.html
+          grep -q 'vendorResults' website/connector-manager.html
+          test "$(grep -o "name:'" website/connector-manager.js | wc -l)" -eq 31
+          grep -q 'Lihat kebutuhan dan langkah konfigurasi' website/connector-manager.js
+          grep -q 'noopener noreferrer' website/connector-manager.js
       - name: Upload website artifact
         uses: actions/upload-pages-artifact@v3
         with:
