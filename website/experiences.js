@@ -602,9 +602,23 @@
       } catch (e) { commerceNote('Katalog belum tersimpan: ' + (e.message || 'periksa sesi dan akses akun.'), 'error'); }
     });
     document.querySelectorAll('[data-vendor]').forEach(btn => btn.addEventListener('click', () => {
-      commerceNote(btn.dataset.vendor + ': koneksi belum aktif. Integrasi memerlukan aplikasi vendor, OAuth/API resmi, kebijakan izin, serta penyimpanan token yang aman di server.');
+      const name = btn.dataset.vendor;
+      const url = btn.dataset.doc;
+      commerceNote(name + ': dokumentasi resmi dibuka. Status tetap “belum terhubung” sampai OAuth/API dan backend diuji berhasil. Jangan masukkan API key atau token ke halaman ini.', 'info');
+      if (url && /^https:\/\//i.test(url)) window.open(url, '_blank', 'noopener,noreferrer');
       $('vendorNotice').scrollIntoView({behavior:'smooth',block:'nearest'});
     }));
+    const vendorSearch = $('vendorSearch');
+    if (vendorSearch) vendorSearch.addEventListener('input', () => {
+      const q = vendorSearch.value.trim().toLocaleLowerCase('id');
+      let visible = 0;
+      document.querySelectorAll('[data-vendor-card]').forEach(card => {
+        const show = !q || (card.dataset.name + ' ' + card.dataset.category + ' ' + card.textContent).toLocaleLowerCase('id').includes(q);
+        card.hidden = !show;
+        if (show) visible++;
+      });
+      $('vendorResults').textContent = visible + ' kanal ditemukan dari 31';
+    });
     loadCommerceBooks();
     db?.auth.onAuthStateChange(() => loadCommerceBooks());
   }
