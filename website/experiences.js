@@ -574,9 +574,32 @@
         etsyButton.textContent = 'Hubungkan Etsy (OAuth)';
       }
     });
-    const etsyResult = new URLSearchParams(window.location.search).get('etsy');
-    if (etsyResult === 'connected') setEtsyStatus('terhubung · callback OAuth berhasil diterima', 'success');
-    else if (etsyResult === 'error') setEtsyStatus('gagal atau dibatalkan · periksa konfigurasi OAuth lalu coba lagi', 'error');
+    const etsyParams = new URLSearchParams(window.location.search);
+    const etsyResult = etsyParams.get('etsy');
+    const etsyReason = etsyParams.get('reason');
+    const etsyCallbackMessages = {
+      backend_not_configured: 'Backend OAuth belum lengkap. Periksa rahasia ETSY_CLIENT_ID dan ETSY_TOKEN_ENCRYPTION_KEY di Supabase.',
+      missing_callback_parameters: 'Callback Etsy tidak menyertakan kode dan state yang diperlukan. Mulai ulang proses Hubungkan Etsy.',
+      invalid_or_expired_state: 'Permintaan OAuth tidak valid, kedaluwarsa, atau sudah digunakan. Demi keamanan, mulai ulang Hubungkan Etsy.',
+      etsy_token_exchange_failed: 'Etsy menolak pertukaran kode OAuth. Periksa persetujuan aplikasi dan callback URL yang terdaftar.',
+      invalid_token_response: 'Etsy mengembalikan respons token yang tidak lengkap. Coba ulang setelah memeriksa akses aplikasi.',
+      token_storage_failed: 'Otorisasi diterima tetapi token belum berhasil disimpan dengan aman. Periksa log fungsi Supabase.',
+    };
+    if (etsyResult === 'connected') {
+      setEtsyStatus('terhubung · callback OAuth berhasil diterima', 'success');
+      commerceNote('Callback OAuth Etsy berhasil. Status akun akan diverifikasi kembali melalui backend; fitur listing dan pesanan belum aktif.', 'success');
+    } else if (etsyResult === 'error') {
+      const message = etsyCallbackMessages[etsyReason] || 'Otorisasi gagal atau dibatalkan. Periksa status koneksi, lalu mulai ulang OAuth bila diperlukan.';
+      setEtsyStatus('callback gagal · ' + (etsyReason || 'unknown'), 'error');
+      commerceNote(message, 'error');
+    }
+    // Remove callback parameters from the visible address after recording the result in the UI.
+    if (etsyResult) {
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('etsy');
+      cleanUrl.searchParams.delete('reason');
+      window.history.replaceState({}, '', cleanUrl.toString());
+    }
     function renderProducts() {
       const list = $('productList'); list.replaceChildren();
       const data = ownedBooks.filter(book => book.metadata && book.metadata.commerce);
