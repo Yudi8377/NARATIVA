@@ -57,6 +57,21 @@
         window.location.assign(bookUrl);
         return;
       }
+      if (stories[active]) {
+        const bookUrl = 'book-reader.html?story=' + encodeURIComponent(active);
+        const popupWidth = Math.min(1000, Math.round((window.screen?.availWidth || 1440) * 0.66));
+        const popupHeight = Math.min(920, Math.round((window.screen?.availHeight || 960) * 0.88));
+        const popupLeft = Math.max(0, Math.round(((window.screen?.availWidth || popupWidth) - popupWidth) / 2));
+        const popupTop = Math.max(0, Math.round(((window.screen?.availHeight || popupHeight) - popupHeight) / 2));
+        const popupFeatures = 'popup=yes,width=' + popupWidth + ',height=' + popupHeight + ',left=' + popupLeft + ',top=' + popupTop + ',resizable=yes,scrollbars=no';
+        const popup = window.open(bookUrl, 'narativa-story-' + active, popupFeatures);
+        if (popup) {
+          try { popup.focus(); } catch (_) {}
+          return;
+        }
+        window.location.assign(bookUrl);
+        return;
+      }
       const story = stories[active] || {title:item?.title || 'Karya NARATIVA',body:item?.description || 'Karya terbit dari katalog NARATIVA.'};
       $('readerTitle').textContent = story.title;
       $('readerBody').textContent = story.body;
