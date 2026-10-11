@@ -201,8 +201,7 @@
       const find = $('findText').value;
       if (!find) { setNotice('Masukkan teks yang ingin dicari.', 'error'); return; }
       const source = editor.value;
-      const escaped = find.replace(/[.*+?^${}()|[\]\\]/g, '\\      const escaped = find.replace(/[.*+?^${}()|[\]\\]/g, '\    document.querySelectorAll('[data-studio]').forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.studio)));');
-');
+      const escaped = find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const re = new RegExp(escaped, 'gi');
       const matches = source.match(re)?.length || 0;
       if (!matches) { setNotice('Teks tidak ditemukan.', 'info'); return; }
