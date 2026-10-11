@@ -40,6 +40,17 @@
       active = stories[id] || catalogById.has(id) || cloudIds.has(id) ? id : 'rain';
       const item = catalogById.get(active);
       activeItem = item || null;
+      // Comic pages open in their own book-like window, outside the catalogue/module UI.
+      // window.open runs synchronously from the user's click so popup blockers can allow it.
+      if (item?.localPages?.length && ['komik','manga','manhwa'].includes(item.category)) {
+        const popupUrl = 'comic-reader.html?work=' + encodeURIComponent(item.id);
+        const popup = window.open(popupUrl, 'narativa-comic-' + item.id, 'popup=yes,width=960,height=900,resizable=yes,scrollbars=no');
+        if (popup) {
+          try { popup.focus(); } catch (_) {}
+          return;
+        }
+        // If the browser blocks popups, keep the existing in-page reader as a usable fallback.
+      }
       const story = stories[active] || {title:item?.title || 'Karya NARATIVA',body:item?.description || 'Karya terbit dari katalog NARATIVA.'};
       $('readerTitle').textContent = story.title;
       $('readerBody').textContent = story.body;
