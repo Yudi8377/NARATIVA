@@ -222,23 +222,39 @@
     curlGesture = null;
     bookFrame.classList.remove('is-curling','is-dragging');
     curlLayer.className = 'page-curl';
-    curlLayer.style.clipPath = 'polygon(100% 0,100% 0,100% 0)';
     curlLayer.style.opacity = '0';
+    ['curlDropShadow','curlPaperShape','curlPaperShade','curlCrease'].forEach(id=>$(id)?.setAttribute('d',''));
   }
-  function paintCurl(x, y, side, bottom, dragging) {
+  function paintCurl(clientX, clientY, side, bottom, dragging) {
     const rect = bookFrame.getBoundingClientRect();
-    const px = Math.max(0,Math.min(100,(x-rect.left)/rect.width*100));
-    const py = Math.max(0,Math.min(100,(y-rect.top)/rect.height*100));
-    const cornerX = side === 'right' ? 100 : 0;
-    const cornerY = bottom ? 100 : 0;
-    const edgeX = side === 'right' ? 100 : 0;
-    const edgeY = bottom ? Math.max(0,py-9) : Math.min(100,py+9);
-    const edgeX2 = side === 'right' ? Math.min(100,px+10) : Math.max(0,px-10);
+    const w = Math.max(1,rect.width), h = Math.max(1,rect.height);
+    const x = Math.max(0,Math.min(w,clientX-rect.left));
+    const y = Math.max(0,Math.min(h,clientY-rect.top));
+    curlLayer.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const right = side==='right', ax = right?w:0, ay = bottom?h:0;
+    const depth = Math.max(28,Math.min(w,h)*.34);
+    let ex, ey, fx, fy, cx1, cy1, cx2, cy2;
+    if(right && !bottom){
+      ex=w; ey=Math.max(0,Math.min(h,y+depth*.58)); fx=Math.max(0,Math.min(w,x+depth*.58)); fy=0;
+      cx1=w-depth*.1; cy1=y+depth*.22; cx2=x+depth*.22; cy2=depth*.08;
+    } else if(right && bottom){
+      ex=w; ey=Math.min(h,Math.max(0,y-depth*.58)); fx=Math.max(0,Math.min(w,x+depth*.58)); fy=h;
+      cx1=w-depth*.1; cy1=y-depth*.22; cx2=x+depth*.22; cy2=h-depth*.08;
+    } else if(!right && !bottom){
+      ex=0; ey=Math.max(0,Math.min(h,y+depth*.58)); fx=Math.min(w,Math.max(0,x-depth*.58)); fy=0;
+      cx1=depth*.1; cy1=y+depth*.22; cx2=x-depth*.22; cy2=depth*.08;
+    } else {
+      ex=0; ey=Math.min(h,Math.max(0,y-depth*.58)); fx=Math.min(w,Math.max(0,x-depth*.58)); fy=h;
+      cx1=depth*.1; cy1=y-depth*.22; cx2=x-depth*.22; cy2=h-depth*.08;
+    }
+    const n = v => Number(v).toFixed(1);
+    const path = `M ${n(ax)} ${n(ay)} L ${n(ex)} ${n(ey)} Q ${n(cx1)} ${n(cy1)} ${n(x)} ${n(y)} Q ${n(cx2)} ${n(cy2)} ${n(fx)} ${n(fy)} L ${n(ax)} ${n(ay)} Z`;
+    const crease = `M ${n(ex)} ${n(ey)} Q ${n(cx1)} ${n(cy1)} ${n(x)} ${n(y)} Q ${n(cx2)} ${n(cy2)} ${n(fx)} ${n(fy)}`;
+    $('curlPaperShape').setAttribute('d',path);
+    $('curlPaperShade').setAttribute('d',path);
+    $('curlDropShadow').setAttribute('d',path);
+    $('curlCrease').setAttribute('d',crease);
     curlLayer.className = 'page-curl is-visible' + (side==='left'?' is-left':'') + (bottom?' is-bottom':'');
-    curlLayer.style.clipPath = `polygon(${cornerX}% ${cornerY}%, ${edgeX}% ${edgeY}%, ${px}% ${py}%, ${edgeX2}% ${cornerY}%)`;
-    curlLayer.style.background = side==='right'
-      ? 'linear-gradient(135deg,#fffdf5 0%,#f4ead6 36%,#cbb99a 68%,#746047 100%)'
-      : 'linear-gradient(225deg,#fffdf5 0%,#f4ead6 36%,#cbb99a 68%,#746047 100%)';
     curlLayer.style.opacity = String(dragging ? .98 : .72);
     bookFrame.classList.add('is-curling');
     bookFrame.classList.toggle('is-dragging',!!dragging);
