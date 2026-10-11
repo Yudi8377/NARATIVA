@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b0c0f">
+<meta name="description" content="Pembaca komik mandiri NARATIVA.">
+<title>Pembaca Komik — NARATIVA</title>
+<link rel="stylesheet" href="comic-reader.css">
+<script defer src="reader-catalog.js"></script>
+<script defer src="comic-reader.js"></script>
+</head>
+<body>
+<main class="comic-app" id="comicApp">
+  <header class="comic-toolbar">
+    <div class="comic-title-wrap"><span class="comic-brand">NARATIVA <i>COMIC READER</i></span><h1 id="comicTitle">Memuat komik…</h1></div>
+    <div class="comic-tools">
+      <button id="viewToggle" type="button" aria-pressed="false" title="Ubah ukuran jendela">⛶ Layar penuh</button>
+      <button id="closeReader" class="icon-button" type="button" aria-label="Tutup pembaca" title="Tutup">×</button>
+    </div>
+  </header>
+  <section class="comic-stage" aria-label="Halaman komik">
+    <button id="prevPage" class="page-arrow" type="button" aria-label="Halaman sebelumnya" title="Kembali">‹</button>
+    <div class="comic-page-wrap"><img id="comicPage" alt="Halaman komik" draggable="false"><p id="loadError" hidden>Halaman komik tidak dapat dimuat. Muat ulang jendela ini untuk mencoba lagi.</p></div>
+    <button id="nextPage" class="page-arrow" type="button" aria-label="Halaman berikutnya" title="Lanjut">›</button>
+  </section>
+  <footer class="comic-footer">
+    <button id="prevPageBottom" type="button">← Kembali</button>
+    <span id="pageStatus" aria-live="polite">Halaman —</span>
+    <button id="nextPageBottom" type="button">Lanjut →</button>
+    <button id="downloadPage" type="button" class="quiet-button">Unduh halaman</button>
+  </footer>
+  <p id="rightsNote" class="rights-note"></p>
+</main>
+</body>
+</html>
