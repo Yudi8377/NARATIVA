@@ -13,27 +13,29 @@
       cloud: { title:'Kota di Atas Awan', body:'Di atas kabut yang tak pernah surut, sebuah kota bergerak mengikuti arah angin. Seorang kurir muda menerima paket tanpa alamat. Satu-satunya petunjuk adalah peta yang berubah setiap kali ia berkedip.' },
       archive: { title:'Arsip Tengah Malam', body:'Setiap tengah malam, satu berkas baru muncul di ruang arsip yang telah dikunci selama dua puluh tahun. Detektif Mara menemukan bahwa semua berkas itu mencatat kejadian sehari sebelum terjadi.' }
     };
+    const cloudIds = new Set();
     let active = 'rain';
     const modal = $('readerModal');
     function openStory(id) {
       active = stories[id] ? id : 'rain';
       $('readerTitle').textContent = stories[active].title;
       $('readerBody').textContent = stories[active].body;
-      $('readerNotice').textContent = 'Konten demo. Riwayat baca hanya disimpan di perangkat ini.';
+      $('readerNotice').textContent = cloudIds.has(active) ? 'Karya terbit dari katalog NARATIVA. Progres baca pada tahap ini disimpan di perangkat.' : 'Konten demo. Riwayat baca hanya disimpan di perangkat ini.';
+      $('nextStory').hidden = cloudIds.has(active);
       modal.hidden = false;
       $('closeReader').focus();
-      safeStore.set('narativa-reader-last', { id: active, progress: 32, at: new Date().toISOString() });
+      safeStore.set('narativa-reader-last', { id: active, progress: 0, at: new Date().toISOString() });
     }
     document.querySelectorAll('[data-read]').forEach(btn => btn.addEventListener('click', () => openStory(btn.dataset.read)));
     $('closeReader').addEventListener('click', () => { modal.hidden = true; });
     modal.addEventListener('click', e => { if (e.target === modal) modal.hidden = true; });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) { modal.hidden = true; } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !modal.hidden) modal.hidden = true; });
     $('saveStory').addEventListener('click', () => {
       const saved = safeStore.get('narativa-reader-saved', []);
       if (!saved.some(item => item.id === active)) saved.push({ id: active, title: stories[active].title });
       safeStore.set('narativa-reader-saved', saved);
       renderSaved();
-      $('readerNotice').textContent = 'Tersimpan di perangkat ini.';
+      $('readerNotice').textContent = 'Disimpan ke daftar pada perangkat ini.';
     });
     $('nextStory').addEventListener('click', () => openStory(active === 'rain' ? 'cloud' : active === 'cloud' ? 'archive' : 'rain'));
     function renderSaved() {
@@ -59,13 +61,57 @@
       document.querySelectorAll('[data-genre]').forEach(b => b.classList.toggle('is-selected', b === btn));
       filterStories();
     }));
+
+    const db = window.supabase?.createClient?.('https://hdsqwkydgruyfbqqwhdk.supabase.co', 'sb_publishable_m24u_7V16Y-bq_B_YydL-w_dw_4bOb8');
+    async function loadPublishedWorks() {
+      const grid = $('storyGrid');
+      if (!db) return;
+      const { data, error } = await db.from('books').select('id,title,description,content_type,language_code,slug,updated_at').eq('status','published').order('updated_at',{ascending:false}).limit(60);
+      if (error) {
+        const note = document.createElement('p'); note.className = 'x-feedback'; note.textContent = 'Karya terbit belum dapat dimuat saat ini. Coba muat ulang halaman.';
+        grid.prepend(note); return;
+      }
+      for (const book of (data || [])) {
+        const { data: versions } = await db.from('book_versions').select('canonical_content,version_number').eq('book_id',book.id).order('version_number',{ascending:false}).limit(1);
+        const canonical = versions?.[0]?.canonical_content || {};
+        const body = typeof canonical.body === 'string' ? canonical.body : (book.description || 'Naskah ini belum memiliki isi yang dapat ditampilkan.');
+        const id = 'cloud-' + book.id;
+        stories[id] = { title: book.title, body };
+        cloudIds.add(id);
+        const card = document.createElement('article'); card.className = 'x-story-card'; card.dataset.title = book.title; card.dataset.genre = 'karya-kreator';
+        const cover = document.createElement('div'); cover.className = 'x-cover cover-cloud';
+        const label = document.createElement('span'); label.textContent = String(book.content_type || 'KARYA').replaceAll('_',' ').toUpperCase();
+        const name = document.createElement('b'); name.textContent = book.title.toUpperCase();
+        const footer = document.createElement('small'); footer.textContent = 'NARATIVA · TERBIT';
+        cover.append(label,name,footer);
+        const meta = document.createElement('div'); meta.className = 'x-story-meta';
+        const type = document.createElement('span'); type.textContent = book.language_code === 'id' ? 'BAHASA INDONESIA' : String(book.language_code || 'KARYA').toUpperCase();
+        const status = document.createElement('span'); status.textContent = 'TERBIT';
+        meta.append(type,status);
+        const heading = document.createElement('h3'); heading.textContent = book.title;
+        const desc = document.createElement('p'); desc.textContent = book.description || body.slice(0,160);
+        const button = document.createElement('button'); button.className = 'x-text-button'; button.type = 'button'; button.dataset.read = id; button.textContent = 'Baca karya →';
+        card.append(cover,meta,heading,desc,button); grid.prepend(card);
+      }
+      filterStories();
+    }
+    loadPublishedWorks();
   }
 
   if (page === 'creator') {
     let mode = 'writing';
     const draftKey = 'narativa-creator-drafts';
     const draftList = () => safeStore.get(draftKey, []);
-    function updateCount() { $('projectCount').textContent = String(draftList().length); }
+    const db = window.supabase?.createClient?.('https://hdsqwkydgruyfbqqwhdk.supabase.co', 'sb_publishable_m24u_7V16Y-bq_B_YydL-w_dw_4bOb8');
+    let signedInUser = null;
+    let cloudBooks = [];
+    const slugify = value => value.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,64) || 'karya';
+    const contentType = value => ({writing:'novel',comic:'comic',audio:'audio_drama',photo:'other',illustration:'other',video:'other','3d':'other',other:'other'}[value] || 'other');
+    function setNotice(message, kind) {
+      $('creatorNotice').textContent = message;
+      $('creatorNotice').dataset.kind = kind || 'info';
+    }
+    function updateCount() { $('projectCount').textContent = String(cloudBooks.length || draftList().length); }
     function setMode(next) {
       mode = next;
       document.querySelectorAll('[data-studio]').forEach(btn => {
@@ -75,25 +121,117 @@
       });
       $('workTextLabel').textContent = mode === 'comic' ? 'Premis / ringkasan panel' : 'Benih cerita / naskah';
       $('workText').placeholder = mode === 'comic' ? 'Jelaskan panel, adegan, dialog, dan arah visual…' : 'Tulis ide, dialog, atau adegan…';
-      $('creatorNotice').textContent = mode === 'comic' ? 'Workspace komik: susun premis dan outline panel secara lokal.' : 'Workspace naskah: tulis dan susun struktur cerita secara lokal.';
+      setNotice(mode === 'comic' ? 'Workspace komik siap. Simpan untuk menyimpan versi karya ke akun cloud.' : 'Workspace naskah siap. Simpan untuk menyimpan versi karya ke akun cloud.');
     }
     document.querySelectorAll('[data-studio]').forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.studio)));
-    function saveDraft() {
+
+    function renderCloudProjects() {
+      const box = $('cloudProjects');
+      if (!box) return;
+      box.replaceChildren();
+      if (!cloudBooks.length) {
+        const p = document.createElement('p'); p.className = 'x-muted';
+        p.textContent = signedInUser ? 'Belum ada karya tersimpan di akun ini. Buat karya pertama di editor.' : 'Masuk melalui Collective Workspace untuk menyimpan dan menyinkronkan karya.';
+        box.appendChild(p); return;
+      }
+      cloudBooks.forEach(book => {
+        const row = document.createElement('article'); row.className = 'x-product-row';
+        const info = document.createElement('div');
+        const title = document.createElement('h3'); title.textContent = book.title;
+        const meta = document.createElement('p'); meta.textContent = String(book.content_type || 'karya').replaceAll('_',' ') + ' · ' + book.status;
+        info.append(title,meta);
+        const edit = document.createElement('button'); edit.className = 'x-button x-secondary'; edit.type = 'button'; edit.textContent = 'Buka';
+        edit.addEventListener('click', async () => {
+          try {
+            const { data, error } = await db.from('book_versions').select('canonical_content').eq('book_id',book.id).order('version_number',{ascending:false}).limit(1);
+            if (error) throw error;
+            const content = data?.[0]?.canonical_content || {};
+            $('workTitle').value = book.title;
+            $('workText').value = content.body || book.description || '';
+            setMode(content.mode || (book.content_type === 'comic' ? 'comic' : 'writing'));
+            $('workFormat').value = content.format || (book.content_type === 'comic' ? 'comic' : 'writing');
+            $('workVisibility').value = content.visibility || (book.status === 'published' ? 'public' : 'private');
+            $('rightsOwner').value = content.rightsOwner || '';
+            $('rightsLicense').value = content.license || 'All rights reserved';
+            $('aiPermission').checked = !!content.aiPermission;
+            $('create').scrollIntoView({behavior:'smooth'});
+            setNotice('Karya dimuat dari cloud. Simpan untuk membuat versi berikutnya.');
+          } catch (e) { setNotice('Gagal membuka karya: ' + (e.message || 'kesalahan tidak diketahui'), 'error'); }
+        });
+        row.append(info,edit); box.appendChild(row);
+      });
+    }
+    async function refreshCloudProjects() {
+      if (!db) { setNotice('Library Supabase belum termuat. Muat ulang halaman.', 'error'); return; }
+      const { data: sessionData, error: sessionError } = await db.auth.getSession();
+      if (sessionError) { setNotice('Sesi akun tidak dapat diperiksa: ' + sessionError.message, 'error'); return; }
+      signedInUser = sessionData.session?.user || null;
+      if (!signedInUser) {
+        cloudBooks = [];
+        updateCount(); renderCloudProjects();
+        setNotice('Untuk menyimpan karya ke cloud, masuk terlebih dahulu di halaman utama → Collective AI.', 'info');
+        return;
+      }
+      const { data, error } = await db.from('books').select('id,owner_id,slug,title,description,content_type,status,metadata,updated_at').eq('owner_id',signedInUser.id).order('updated_at',{ascending:false}).limit(50);
+      if (error) { setNotice('Gagal memuat karya cloud: ' + error.message, 'error'); return; }
+      cloudBooks = data || [];
+      updateCount(); renderCloudProjects();
+      setNotice('Terhubung ke akun ' + (signedInUser.email || '') + '. Karya disimpan di cloud dan privat secara default.', 'success');
+    }
+    async function persistWork(status) {
       const title = $('workTitle').value.trim();
       const body = $('workText').value.trim();
-      if (!title || !body) { $('creatorNotice').textContent = 'Isi judul dan materi karya sebelum menyimpan.'; return; }
-      const drafts = draftList();
-      const existing = drafts.findIndex(d => d.title === title && d.mode === mode);
-      const item = { title, body, mode, format: $('workFormat').value, visibility: $('workVisibility').value, updatedAt: new Date().toISOString(), rightsOwner: $('rightsOwner').value.trim(), license: $('rightsLicense').value, aiPermission: $('aiPermission').checked };
-      if (existing >= 0) drafts[existing] = item; else drafts.unshift(item);
-      if (safeStore.set(draftKey, drafts.slice(0, 50))) $('creatorNotice').textContent = 'Draft "' + title + '" tersimpan di perangkat ini. Belum diunggah ke server.';
-      else $('creatorNotice').textContent = 'Penyimpanan browser penuh. Ekspor atau salin naskah Anda sebelum menutup halaman.';
-      updateCount();
+      if (!title || !body) { setNotice('Isi judul dan materi karya sebelum menyimpan.', 'error'); return; }
+      if (!db) { setNotice('Library Supabase belum termuat. Muat ulang halaman.', 'error'); return; }
+      const { data: sessionData, error: sessionError } = await db.auth.getSession();
+      if (sessionError) throw sessionError;
+      signedInUser = sessionData.session?.user || null;
+      if (!signedInUser) {
+        const local = draftList();
+        const item = { title, body, mode, format:$('workFormat').value, visibility:$('workVisibility').value, updatedAt:new Date().toISOString(), rightsOwner:$('rightsOwner').value.trim(), license:$('rightsLicense').value, aiPermission:$('aiPermission').checked };
+        const index = local.findIndex(d => d.title === title && d.mode === mode);
+        if (index >= 0) local[index] = item; else local.unshift(item);
+        safeStore.set(draftKey, local.slice(0,50));
+        updateCount();
+        setNotice('Draft hanya tersimpan lokal. Untuk sinkronisasi cloud, masuk melalui halaman utama → Collective AI.', 'info');
+        return;
+      }
+      const format = $('workFormat').value;
+      const visibility = status === 'published' ? 'public' : $('workVisibility').value;
+      const slug = slugify(title) + '-' + signedInUser.id.slice(0,8);
+      const metadata = { mode, format, visibility, rightsOwner:$('rightsOwner').value.trim(), license:$('rightsLicense').value, aiPermission:$('aiPermission').checked, savedAt:new Date().toISOString() };
+      const rightsMetadata = { owner_name:metadata.rightsOwner, license:metadata.license, ai_processing_allowed:metadata.aiPermission, provenance:'creator-studio' };
+      const bookFields = { owner_id:signedInUser.id, slug, title, description:body.slice(0,1200), language_code:'id', content_type:contentType(format), status, rights_metadata:rightsMetadata, metadata };
+      let book = cloudBooks.find(b => b.slug === slug);
+      if (book) {
+        const { data, error } = await db.from('books').update(bookFields).eq('id',book.id).select('id,slug,title,status').single();
+        if (error) throw error;
+        book = data;
+      } else {
+        const { data, error } = await db.from('books').insert(bookFields).select('id,slug,title,status').single();
+        if (error) throw error;
+        book = data;
+      }
+      const { data: versions, error: versionError } = await db.from('book_versions').select('version_number').eq('book_id',book.id).order('version_number',{ascending:false}).limit(1);
+      if (versionError) throw versionError;
+      const versionNumber = (versions?.[0]?.version_number || 0) + 1;
+      const canonical = { body, mode, format, visibility, rightsOwner:metadata.rightsOwner, license:metadata.license, aiPermission:metadata.aiPermission, savedAt:metadata.savedAt };
+      const { error: saveVersionError } = await db.from('book_versions').insert({ book_id:book.id, version_number:versionNumber, canonical_content:canonical, change_summary:status === 'published' ? 'Kreator menerbitkan karya' : 'Kreator menyimpan versi karya', created_by:signedInUser.id });
+      if (saveVersionError) throw saveVersionError;
+      $('workVisibility').value = visibility;
+      await refreshCloudProjects();
+      setNotice(status === 'published' ? 'Karya diterbitkan. Karya kini dapat ditemukan di Ruang Pembaca.' : 'Draft dan versi ' + versionNumber + ' tersimpan di akun cloud.', 'success');
     }
-    $('saveDraft').addEventListener('click', saveDraft);
+    $('saveDraft').addEventListener('click', async () => {
+      try { await persistWork('draft'); } catch (e) { setNotice('Penyimpanan gagal: ' + (e.message || 'periksa koneksi dan akses akun.'), 'error'); }
+    });
+    $('publishWork').addEventListener('click', async () => {
+      if (!window.confirm('Terbitkan karya ini ke Ruang Pembaca publik? Pastikan Anda memiliki hak atas naskah dan asetnya.')) return;
+      try { await persistWork('published'); } catch (e) { setNotice('Publikasi gagal: ' + (e.message || 'periksa koneksi dan akses akun.'), 'error'); }
+    });
     function outline() {
       const raw = $('workText').value.trim();
-      if (raw.length < 40) { $('creatorNotice').textContent = 'Tambahkan materi lebih panjang agar outline awal bisa disusun.'; return; }
+      if (raw.length < 40) { setNotice('Tambahkan materi lebih panjang agar outline awal bisa disusun.', 'error'); return; }
       const sentences = raw.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [raw];
       const chunks = [];
       const count = Math.min(5, Math.max(2, sentences.length));
@@ -106,7 +244,7 @@
       const result = $('outlineResult'); result.replaceChildren();
       chunks.forEach((text, i) => { const article = document.createElement('article'); const h = document.createElement('h4'); h.textContent = (mode === 'comic' ? 'PANEL / BEAT ' : 'BAGIAN ') + String(i + 1).padStart(2, '0'); const p = document.createElement('p'); p.textContent = text; article.append(h,p); result.appendChild(article); });
       result.hidden = false;
-      $('creatorNotice').textContent = 'Outline dibuat oleh aturan lokal sederhana, bukan hasil model AI.';
+      setNotice('Outline dibuat oleh aturan lokal sederhana, bukan hasil model AI.');
     }
     $('makeOutline').addEventListener('click', outline);
     $('newComic').addEventListener('click', () => { setMode('comic'); $('workTitle').value = 'Komik baru'; $('workText').value = ''; $('workFormat').value = 'comic'; $('create').scrollIntoView({behavior:'smooth'}); $('workText').focus(); });
@@ -124,7 +262,8 @@
       });
       const note = document.createElement('p'); note.className = 'x-muted'; note.textContent = files.length > 12 ? 'Menampilkan 12 dari ' + files.length + ' berkas. Berkas tidak diunggah.' : 'Berkas hanya dibaca oleh browser ini; tidak dikirim ke server.'; box.appendChild(note);
     });
-    updateCount();
+    refreshCloudProjects().catch(e => setNotice('Gagal memeriksa akun: ' + e.message, 'error'));
+    db?.auth.onAuthStateChange(() => refreshCloudProjects());
   }
 
   if (page === 'commerce') {
