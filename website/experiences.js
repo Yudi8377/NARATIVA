@@ -23,6 +23,18 @@
     const readerPageSize = 9000;
     const modal = $('readerModal');
     const grid = $('storyGrid');
+    const readerViewToggle = $('readerViewToggle');
+    function setReaderView(full) {
+      modal.classList.toggle('x-reader-modal--full', !!full);
+      modal.classList.toggle('x-reader-modal--half', !full);
+      readerViewToggle.setAttribute('aria-pressed', String(!!full));
+      readerViewToggle.textContent = full ? '▣ Setengah layar' : '⛶ Layar penuh';
+      safeStore.set('narativa-reader-view', full ? 'full' : 'half');
+    }
+    function closeReader() {
+      modal.hidden = true;
+      document.body.classList.remove('x-reader-open');
+    }
 
     function openStory(id) {
       active = stories[id] || catalogById.has(id) || cloudIds.has(id) ? id : 'rain';
@@ -53,6 +65,8 @@
       $('readerNotice').textContent = (item?.contentUrl || item?.localPages || item?.localPlayerUrl) ? 'Karya tersedia secara lokal di NARATIVA. Periksa catatan lisensi sebelum menggunakan ulang.' : item ? 'Tautan menuju arsip sumber. Status hak pada halaman sumber perlu diperiksa sebelum mengunduh atau menerbitkan ulang.' : (cloudIds.has(active) ? 'Karya terbit dari katalog NARATIVA. Progres baca disimpan di perangkat.' : 'Konten demo orisinal. Riwayat baca hanya disimpan di perangkat ini.');
       $('nextStory').hidden = !!item || cloudIds.has(active);
       modal.hidden = false;
+      document.body.classList.add('x-reader-open');
+      setReaderView(safeStore.get('narativa-reader-view', 'half') === 'full');
       $('closeReader').focus();
       safeStore.set('narativa-reader-last', { id: active, progress: 0, page: 0, at: new Date().toISOString() });
       if (item?.contentUrl || item?.localPages || item?.localPlayerUrl) loadLocalBook(item);
@@ -168,9 +182,36 @@
       if (btn.closest('#storyGrid')) return;
       btn.addEventListener('click', () => openStory(btn.dataset.read));
     });
-    $('closeReader').addEventListener('click', () => { modal.hidden = true; });
-    modal.addEventListener('click', event => { if (event.target === modal) modal.hidden = true; });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) modal.hidden = true; });
+    $('closeReader').addEventListener('click', closeReader);
+    $('readerExit').addEventListener('click', closeReader);
+    readerViewToggle.addEventListener('click', () => setReaderView(!modal.classList.contains('x-reader-modal--full')));
+    modal.addEventListener('click', event => { if (event.target === modal) closeReader(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape' && !modal.hidden) closeReader(); });
+    $('readerDownload').addEventListener('click', async () => {
+      const item = activeItem;
+      if (!item) {
+        $('readerNotice').textContent = 'Unduh belum tersedia untuk cerita demo ini. Pada layanan terbit, unduhan akan mengikuti lisensi dan syarat penggunaan karya.';
+        return;
+      }
+      if (item.localPages?.length && item.license === 'CC BY 4.0') {
+        try {
+          const path = item.localPages[readerPageIndex] || item.localPages[0];
+          const response = await fetch(path);
+          if (!response.ok) throw new Error('File tidak tersedia');
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a'); link.href = url;
+          link.download = item.id + '-halaman-' + String(readerPageIndex + 1).padStart(2, '0') + '.svg';
+          document.body.appendChild(link); link.click(); link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1500);
+          $('readerNotice').textContent = 'Sampel halaman diunduh. Ini karya demo CC BY 4.0; atribusi tetap diperlukan. Pembayaran dan pembagian pendapatan belum diaktifkan pada prototipe.';
+        } catch (_) {
+          $('readerNotice').textContent = 'File sampel belum berhasil diunduh. Coba lagi setelah halaman selesai dimuat.';
+        }
+        return;
+      }
+      $('readerNotice').textContent = 'Unduhan untuk karya ini belum dibuka. Akses unduh berbayar nantinya memerlukan persetujuan kreator, harga, lisensi, syarat penggunaan, serta pembagian pendapatan yang jelas.';
+    });
     $('saveStory').addEventListener('click', () => {
       const saved = safeStore.get('narativa-reader-saved', []);
       const title = stories[active]?.title || catalogById.get(active)?.title || 'Karya NARATIVA';
