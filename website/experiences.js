@@ -555,7 +555,7 @@
           if (etsyButton) etsyButton.textContent = 'Hubungkan Etsy (OAuth)';
         }
       } catch (_) {
-        setEtsyStatus('backend OAuth belum dipasang/aktif di Supabase; status koneksi belum dapat diverifikasi', 'error');
+        setEtsyStatus('konfigurasi OAuth belum lengkap di Supabase; status koneksi belum dapat diverifikasi', 'error');
       }
     }
     if (etsyButton) etsyButton.addEventListener('click', async () => {
