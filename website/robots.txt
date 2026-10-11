@@ -1,2 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /admin.html
+
+Sitemap: https://yudi8377.github.io/NARATIVA/sitemap.xml
