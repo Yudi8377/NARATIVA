@@ -47,14 +47,14 @@ body.is-fullscreen .book-frame{width:min(82vw,1120px);height:min(81vh,1000px)}bo
 .book-frame{isolation:isolate;transform-style:preserve-3d;perspective:2200px;touch-action:pan-y}
 .book-page{transition:box-shadow .22s ease,filter .22s ease;will-change:transform}
 .book-page.is-cover{box-shadow:inset 0 0 0 3px #263b36,inset 0 0 0 4px #c4a36d,inset 20px 0 26px -25px #000, 3px 2px 4px #0002}
-.page-curl{position:absolute;z-index:8;inset:0;pointer-events:none;opacity:0;clip-path:polygon(100% 0,100% 0,100% 0);background:linear-gradient(135deg,#fffdf4 0%,#f7efdf 37%,#d2c3a8 68%,#8f7b5e 100%);filter:drop-shadow(-5px 5px 5px #34281966);transform-origin:100% 0;transition:opacity .12s ease;backface-visibility:hidden}
+.page-curl{position:absolute;z-index:8;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;overflow:visible;filter:drop-shadow(-4px 5px 5px #34281955);transform-origin:center;transition:opacity .12s ease;backface-visibility:hidden}
 .page-curl.is-visible{opacity:1}
-.page-curl::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#ffffffbd 0%,#fff9e9a8 24%,#7c694b33 54%,transparent 70%);mix-blend-mode:soft-light}
+.page-curl path{vector-effect:non-scaling-stroke}.page-curl.is-visible{opacity:1}.page-curl.is-left{transform-origin:0 0}.page-curl.is-bottom{transform-origin:100% 100%}.page-curl.is-left.is-bottom{transform-origin:0 100%}
 .page-curl.is-left{transform-origin:0 0}
 .page-curl.is-bottom{transform-origin:100% 100%}
 .page-curl.is-left.is-bottom{transform-origin:0 100%}
 .book-frame.is-curling .book-page{filter:brightness(.985);box-shadow:inset 0 0 30px #4c3b241c,0 2px 5px #0001}
-.book-frame.is-dragging .page-curl{transition:none}
+.book-frame.is-dragging .page-curl{transition:none}.book-frame.is-curling .page-curl{filter:drop-shadow(-7px 8px 8px #24190d66)}
 .book-frame.is-dragging{cursor:grabbing}
 .book-frame .page-curl-hint{position:absolute;z-index:9;right:0;top:0;width:42px;height:42px;pointer-events:none;opacity:0;background:linear-gradient(225deg,#fff9e8 0%,#e4d4b8 44%,transparent 46%);filter:drop-shadow(-2px 2px 2px #0002);transition:opacity .18s}
 .book-frame:hover .page-curl-hint{opacity:.7}
