@@ -40,23 +40,21 @@
       active = stories[id] || catalogById.has(id) || cloudIds.has(id) ? id : 'rain';
       const item = catalogById.get(active);
       activeItem = item || null;
-      // Comic pages open in their own book-like window, outside the catalogue/module UI.
-      // window.open runs synchronously from the user's click so popup blockers can allow it.
-      if (item?.localPages?.length && ['komik','manga','manhwa'].includes(item.category)) {
-        const popupUrl = 'comic-reader.html?work=' + encodeURIComponent(item.id);
-        const popupWidth = Math.min(1000, Math.round((window.screen?.availWidth || 1440) * 0.62));
-        const popupHeight = Math.min(900, Math.round((window.screen?.availHeight || 900) * 0.88));
+      // Every catalog work opens in the same standalone interactive-book experience.
+      // The catalogue stays separate; if a popup is blocked, navigate to the book reader in this tab.
+      if (item) {
+        const bookUrl = 'book-reader.html?work=' + encodeURIComponent(item.id);
+        const popupWidth = Math.min(1000, Math.round((window.screen?.availWidth || 1440) * 0.66));
+        const popupHeight = Math.min(920, Math.round((window.screen?.availHeight || 960) * 0.88));
         const popupLeft = Math.max(0, Math.round(((window.screen?.availWidth || popupWidth) - popupWidth) / 2));
         const popupTop = Math.max(0, Math.round(((window.screen?.availHeight || popupHeight) - popupHeight) / 2));
         const popupFeatures = 'popup=yes,width=' + popupWidth + ',height=' + popupHeight + ',left=' + popupLeft + ',top=' + popupTop + ',resizable=yes,scrollbars=no';
-        const popup = window.open(popupUrl, 'narativa-comic-' + item.id, popupFeatures);
+        const popup = window.open(bookUrl, 'narativa-book-' + item.id, popupFeatures);
         if (popup) {
           try { popup.focus(); } catch (_) {}
           return;
         }
-        // If popups are blocked, still open the standalone comic reader in this tab
-        // instead of putting the comic back inside the catalogue module.
-        window.location.assign(popupUrl);
+        window.location.assign(bookUrl);
         return;
       }
       const story = stories[active] || {title:item?.title || 'Karya NARATIVA',body:item?.description || 'Karya terbit dari katalog NARATIVA.'};
