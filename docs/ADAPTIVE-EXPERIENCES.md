@@ -26,8 +26,10 @@ NARATIVA uses one shared identity, asset model, rights/provenance model, and ser
 ## Data boundaries
 
 - Reader bookmarks, Creator Studio drafts, and Commerce Center catalog entries are stored in local browser storage in this release. They are not cloud-synced and may be cleared by browser data deletion.
-- Asset selection is a local preview. No file bytes are uploaded.
-- The UI's visibility selector is descriptive only; it does not publish assets or enforce authorization.
+- Creator Studio saves authenticated works and version records to Supabase; publication is marked only after a version insert succeeds. Reader discovery queries published works. Account-level end-to-end authorization still requires real-browser testing.
+- Private creator asset uploads use the `narativa-assets` bucket and `book_assets` metadata under owner-scoped paths. The browser first shows a local preview; uploading is a separate explicit action and requires an authenticated owner and a saved/open project. Metadata listing does not expose signed download URLs.
+- The UI's visibility selector is not, by itself, an authorization boundary. Publication status is updated by the creator action, while database RLS remains the security boundary.
+- Story pipeline submission requires explicit manuscript-processing consent in the Creator Studio. Treat pipeline output as draft material for human review.
 - Vendor connector cards explain requirements. They do not initiate OAuth or publish listings.
 - Admin page contains no privileged data and no admin mutation controls. Do not remove the gate until server-side role enforcement and protected routes are implemented.
 - Collective AI sharing is explicit and separate from private work; network visibility must remain opt-in and verified-only.
