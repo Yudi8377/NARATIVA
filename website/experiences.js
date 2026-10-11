@@ -44,7 +44,12 @@
       // window.open runs synchronously from the user's click so popup blockers can allow it.
       if (item?.localPages?.length && ['komik','manga','manhwa'].includes(item.category)) {
         const popupUrl = 'comic-reader.html?work=' + encodeURIComponent(item.id);
-        const popup = window.open(popupUrl, 'narativa-comic-' + item.id, 'popup=yes,width=960,height=900,resizable=yes,scrollbars=no');
+        const popupWidth = Math.min(1000, Math.round((window.screen?.availWidth || 1440) * 0.62));
+        const popupHeight = Math.min(900, Math.round((window.screen?.availHeight || 900) * 0.88));
+        const popupLeft = Math.max(0, Math.round(((window.screen?.availWidth || popupWidth) - popupWidth) / 2));
+        const popupTop = Math.max(0, Math.round(((window.screen?.availHeight || popupHeight) - popupHeight) / 2));
+        const popupFeatures = 'popup=yes,width=' + popupWidth + ',height=' + popupHeight + ',left=' + popupLeft + ',top=' + popupTop + ',resizable=yes,scrollbars=no';
+        const popup = window.open(popupUrl, 'narativa-comic-' + item.id, popupFeatures);
         if (popup) {
           try { popup.focus(); } catch (_) {}
           return;
