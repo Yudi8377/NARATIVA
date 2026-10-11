@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "notes": "Only import exact files after human verification of each asset's reuse license. Do not infer file rights from a repository's license alone. Allowed licenses: CC0-1.0, CC-BY-4.0, CC-BY-SA-4.0. Add sources with a unique id and exact repository/path/ref.",
+  "sources": []
+}
