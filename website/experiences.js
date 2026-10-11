@@ -17,6 +17,9 @@
     const catalogById = new Map(catalog.map(item => [item.id, item]));
     const cloudIds = new Set();
     let active = 'rain';
+    let readerPages = [];
+    let readerPageIndex = 0;
+    const readerPageSize = 9000;
     const modal = $('readerModal');
     const grid = $('storyGrid');
 
@@ -26,6 +29,11 @@
       const story = stories[active] || {title:item?.title || 'Karya NARATIVA',body:item?.description || 'Karya terbit dari katalog NARATIVA.'};
       $('readerTitle').textContent = story.title;
       $('readerBody').textContent = story.body;
+      $('readerLocalPanel').hidden = true;
+      $('readerBody').hidden = false;
+      $('readerPrevPage').disabled = true;
+      $('readerNextPage').disabled = true;
+      readerPages = []; readerPageIndex = 0;
       $('readerDetails').textContent = item ? [
         'Penulis: ' + item.author,
         'Kategori: ' + item.category.toUpperCase() + ' · Genre: ' + item.genre,
@@ -34,7 +42,7 @@
         'Hak penggunaan: ' + item.rights
       ].join('  |  ') : (cloudIds.has(active) ? 'Karya kreator NARATIVA · baca versi terbit' : 'Cerita demo orisinal NARATIVA · contoh pengalaman membaca');
       const source = $('readerSource');
-      const sourceUrl = item?.read || item?.source || null;
+      const sourceUrl = item?.contentUrl ? null : (item?.read || item?.source || null);
       source.hidden = !sourceUrl;
       if (sourceUrl) {
         source.href = sourceUrl;
@@ -44,8 +52,43 @@
       $('nextStory').hidden = !!item || cloudIds.has(active);
       modal.hidden = false;
       $('closeReader').focus();
-      safeStore.set('narativa-reader-last', { id: active, progress: 0, at: new Date().toISOString() });
+      safeStore.set('narativa-reader-last', { id: active, progress: 0, page: 0, at: new Date().toISOString() });
+      if (item?.contentUrl) loadLocalBook(item);
     }
+
+    async function loadLocalBook(item) {
+      const localPanel = $('readerLocalPanel');
+      $('readerBody').hidden = true;
+      localPanel.hidden = false;
+      $('readerContent').textContent = 'Memuat naskah lokal…';
+      try {
+        const response = await fetch(item.contentUrl);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const text = await response.text();
+        const normalized = text.replace(/\\r/g, '').trim();
+        const paragraphs = normalized.split(/\\n{2,}/).map(part => part.trim()).filter(Boolean);
+        readerPages = []; let pageText = '';
+        for (const paragraph of paragraphs) {
+          const next = pageText ? pageText + '\\n\\n' + paragraph : paragraph;
+          if (next.length > readerPageSize && pageText) { readerPages.push(pageText); pageText = paragraph; }
+          else pageText = next;
+        }
+        if (pageText) readerPages.push(pageText);
+        if (!readerPages.length) readerPages = [normalized];
+        readerPageIndex = 0; renderLocalPage();
+      } catch (error) {
+        $('readerContent').textContent = 'Naskah lokal belum dapat dimuat. Coba muat ulang halaman.';
+      }
+    }
+    function renderLocalPage() {
+      $('readerContent').textContent = readerPages[readerPageIndex] || '';
+      $('readerPageStatus').textContent = 'Bagian ' + (readerPageIndex + 1) + ' dari ' + readerPages.length;
+      $('readerPrevPage').disabled = readerPageIndex <= 0;
+      $('readerNextPage').disabled = readerPageIndex >= readerPages.length - 1;
+      safeStore.set('narativa-reader-last', {id:active,progress:readerPages.length ? Math.round((readerPageIndex + 1) / readerPages.length * 100) : 0,page:readerPageIndex,at:new Date().toISOString()});
+    }
+    $('readerPrevPage').addEventListener('click', () => { if (readerPageIndex > 0) { readerPageIndex--; renderLocalPage(); $('readerContent').scrollIntoView({block:'start',behavior:'smooth'}); } });
+    $('readerNextPage').addEventListener('click', () => { if (readerPageIndex < readerPages.length - 1) { readerPageIndex++; renderLocalPage(); $('readerContent').scrollIntoView({block:'start',behavior:'smooth'}); } });
 
     function renderCatalog() {
       grid.replaceChildren();
@@ -55,6 +98,21 @@
         card.className = 'x-story-card';
         card.dataset.title = item.title;
         card.dataset.genre = item.category;
+        const genreText = (item.genre + ' ' + item.title + ' ' + item.description).toLocaleLowerCase('id');
+        const tags = [];
+        if (item.category === 'fantasi' || /fantasi|fairy|wonderland|oz|mars|goblin/.test(genreText)) tags.push('fantasi');
+        if (item.category === 'misteri' || /misteri|mystery|detectif|detektif|investigasi|sherlock|pembunuhan|ruang terkunci/.test(genreText)) tags.push('detektif','thriller');
+        if (/horor|horror|gotik|gothic|nightmare|frankenstein|invisible man|jekyll|poe/.test(genreText)) tags.push('horor','gotik');
+        if (/romantis|romansa|romance|phantom of the opera|love|cinta/.test(genreText)) tags.push('romantis');
+        if (/petualangan|adventure|ekspedisi|planetary|perjalanan waktu|konspirasi|pencurian/.test(genreText)) tags.push('action','petualangan');
+        if (/humor|komedi|satire|nonsense|slapstick/.test(genreText)) tags.push('komedi');
+        if (/fiksi ilmiah|science fiction|perjalanan waktu|planetary/.test(genreText)) tags.push('sci-fi');
+        if (/anak|dongeng|fairy|jungle book|alice/.test(genreText)) tags.push('anak');
+        if (/satire/.test(genreText)) tags.push('satire');
+        if (/sejarah|historical/.test(genreText)) tags.push('sejarah');
+        card.dataset.tags = [...new Set(tags)].join(' ');
+        const type = item.category === 'komik' ? 'komik' : (/kumpulan|antologi/.test(item.format.toLocaleLowerCase('id')) ? 'antologi' : 'novel');
+        card.dataset.type = type;
         card.dataset.search = [item.title,item.author,item.genre,item.format,item.year,item.language].join(' ').toLocaleLowerCase('id');
         const cover = document.createElement('div');
         cover.className = 'x-cover ' + (item.category === 'komik' ? 'cover-cloud' : item.category === 'fantasi' ? 'cover-rain' : 'cover-midnight');
@@ -74,7 +132,7 @@
         card.append(cover,meta,heading,description,author,button);
         grid.appendChild(card);
       });
-      $('catalogCount').textContent = catalog.length + ' karya contoh · 20 Komik · 20 Fantasi · 20 Misteri. Pilih kartu untuk melihat metadata dan membuka sumber bacaan.';
+      $('catalogCount').textContent = catalog.length + ' karya contoh · 20 Komik · 20 Fantasi · 20 Misteri. Tiga buku klasik tersedia sebagai teks lokal yang dibaca langsung di NARATIVA.';
     }
 
     $('storyGrid').addEventListener('click', event => {
@@ -110,15 +168,23 @@
     renderSaved();
     const search = $('readerSearch');
     let genre = 'all';
+    const genreFilter = $('readerGenreFilter');
+    const typeFilter = $('readerTypeFilter');
     function filterStories() {
       const query = search.value.trim().toLocaleLowerCase('id');
       document.querySelectorAll('.x-story-card').forEach(card => {
         const haystack = ((card.dataset.search || '') + ' ' + (card.dataset.title || '') + ' ' + (card.dataset.genre || '')).toLocaleLowerCase('id');
         const genres = (card.dataset.genre || '').split(' ');
-        card.hidden = !(haystack.includes(query) && (genre === 'all' || genres.includes(genre)));
+        const tags = (card.dataset.tags || '').split(' ');
+        const type = typeFilter.value;
+        const typeMatch = type === 'all' || card.dataset.type === type || (type === 'cerpen' && card.dataset.type === 'antologi');
+        const genreMatch = genreFilter.value === 'all' || tags.includes(genreFilter.value);
+        card.hidden = !(haystack.includes(query) && (genre === 'all' || genres.includes(genre)) && genreMatch && typeMatch);
       });
     }
     search.addEventListener('input', filterStories);
+    genreFilter.addEventListener('change', filterStories);
+    typeFilter.addEventListener('change', filterStories);
     document.querySelectorAll('[data-genre]').forEach(btn => btn.addEventListener('click', () => {
       genre = btn.dataset.genre;
       document.querySelectorAll('[data-genre]').forEach(b => b.classList.toggle('is-selected', b === btn));
