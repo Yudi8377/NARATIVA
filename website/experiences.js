@@ -242,6 +242,7 @@
     async function outline() {
       const raw = $('workText').value.trim();
       if (raw.length < 80) { setNotice('Tambahkan minimal 80 karakter agar pipeline dapat memetakan adegan.', 'error'); return; }
+      if (!$('aiPermission').checked) { setNotice('Naskah tidak dikirim. Centang izin pemrosesan AI terlebih dahulu jika Anda ingin mengirim naskah ke story pipeline.', 'error'); return; }
       if (!db) { setNotice('Pipeline belum siap karena library Supabase belum termuat.', 'error'); return; }
       const { data: sessionData } = await db.auth.getSession();
       if (!sessionData.session) { setNotice('Masuk terlebih dahulu agar pipeline cerita dapat dijalankan.', 'error'); return; }
