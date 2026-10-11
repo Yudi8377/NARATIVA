@@ -28,6 +28,15 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Validate connector manager assets
+        run: |
+          test -s website/connector-manager.html
+          test -s website/connector-manager.js
+          test -s website/experience.css
+          test -s website/vendor/supabase.js
+          node --check website/connector-manager.js
+          grep -q 'connector-manager.js' website/connector-manager.html
+          grep -q 'experience.css' website/connector-manager.html
       - name: Upload website artifact
         uses: actions/upload-pages-artifact@v3
         with:
