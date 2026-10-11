@@ -31,7 +31,7 @@
   $('viewToggle').addEventListener('click', async () => {
     full = !full;
     document.body.classList.toggle('is-fullscreen', full);
-    $('viewToggle').textContent = full ? '▣ Jendela normal' : '⛶ Layar penuh';
+    $('viewToggle').textContent = full ? '▣ Setengah layar' : '⛶ Layar penuh';
     $('viewToggle').setAttribute('aria-pressed', String(full));
     try {
       if (full) {
