@@ -38,6 +38,9 @@ jobs:
           node --check website/learning.js
           node --check website/reader-catalog.js
           node --check website/experiences.js
+          node --check scripts/library-import.mjs
+          node -e "JSON.parse(require('fs').readFileSync('scripts/library-sources.json','utf8'))"
+          test -s docs/library-importer.md
           test -s website/library/comics/kota-di-atas-awan/page-01.svg
           test -s website/library/comics/kota-di-atas-awan/page-06.svg
           test -s website/library/manga/komet-terakhir/page-01.svg
