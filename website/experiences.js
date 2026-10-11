@@ -206,7 +206,7 @@
       const slug = slugify(title) + '-' + signedInUser.id.slice(0,8);
       const metadata = { mode, format, visibility, rightsOwner:$('rightsOwner').value.trim(), license:$('rightsLicense').value, aiPermission:$('aiPermission').checked, savedAt:new Date().toISOString() };
       const rightsMetadata = { owner_name:metadata.rightsOwner, license:metadata.license, ai_processing_allowed:metadata.aiPermission, provenance:'creator-studio' };
-      const bookFields = { owner_id:signedInUser.id, slug, title, description:body.slice(0,1200), language_code:'id', content_type:contentType(format), status, rights_metadata:rightsMetadata, metadata };
+      const bookFields = { owner_id:signedInUser.id, slug, title, description:body.slice(0,1200), language_code:'id', content_type:contentType(format), status:status === 'published' ? 'draft' : status, rights_metadata:rightsMetadata, metadata };
       let book = cloudBooks.find(b => b.id === activeBookId) || cloudBooks.find(b => b.slug === slug);
       if (book) {
         const { data, error } = await db.from('books').update(bookFields).eq('id',book.id).select('id,slug,title,status').single();
@@ -224,6 +224,10 @@
       const canonical = { body, mode, format, visibility, rightsOwner:metadata.rightsOwner, license:metadata.license, aiPermission:metadata.aiPermission, savedAt:metadata.savedAt, storyboard:lastStoryboard?.storyboard || [], productionPlan:lastStoryboard?.productionPlan || [] };
       const { error: saveVersionError } = await db.from('book_versions').insert({ book_id:book.id, version_number:versionNumber, canonical_content:canonical, change_summary:status === 'published' ? 'Kreator menerbitkan karya' : 'Kreator menyimpan versi karya', created_by:signedInUser.id });
       if (saveVersionError) throw saveVersionError;
+      if (status === 'published') {
+        const { error: publishError } = await db.from('books').update({ status:'published' }).eq('id',book.id).eq('owner_id',signedInUser.id);
+        if (publishError) throw publishError;
+      }
       $('workVisibility').value = visibility;
       await refreshCloudProjects();
       setNotice(status === 'published' ? 'Karya diterbitkan. Karya kini dapat ditemukan di Ruang Pembaca.' : 'Draft dan versi ' + versionNumber + ' tersimpan di akun cloud.', 'success');
