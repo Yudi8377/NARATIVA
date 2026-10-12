@@ -41,6 +41,6 @@
   });
   logoutButton?.addEventListener('click',async()=>{if(db)await db.auth.signOut();locked('Anda telah keluar. Masuk kembali untuk memverifikasi akses.');logoutButton.hidden=true;});
   refresh?.addEventListener('click',check);
-  db?.auth.onAuthStateChange((_event,session)=>{if(!session)locked('Belum ada sesi login. Masuk menggunakan akun admin yang terdaftar.');else check();});
+  // Session checks run on initial load and after explicit sign-in/sign-out to avoid auth callback lock contention.
   check();
 })();
