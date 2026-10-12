@@ -37,10 +37,16 @@ jobs:
           grep -q 'watchSourceForm' website/video.html
           grep -q 'youtube-nocookie.com/embed' website/video.js
           grep -q 'narativa.video.external-sources' website/video.js
+          test -s website/admin-console.js
+          test -s supabase/functions/admin-console/index.ts
+          test -s supabase/migrations/202610120001_narativa_secure_admin_console.sql
+          test -s docs/ADMIN-CONSOLE-SECURITY.md
+          grep -q 'admin-console.js' website/admin.html
           test -s website/connector-manager.html
           test -s website/connector-manager.js
           test -s website/experience.css
           test -s website/vendor/supabase.js
+          node --check website/admin-console.js
           node --check website/connector-manager.js
           node --check website/learning.js
           node --check website/video.js
