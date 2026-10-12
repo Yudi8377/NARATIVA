@@ -9,7 +9,7 @@ This is a source/configuration and live-schema audit. It is **not** a successful
 
 ## Executive summary
 
-NARATIVA has a real Supabase project and a partial creator-to-reader persistence path. The path is implemented in code, but a full account-level save → publish → public-read test remains outstanding. Commerce is a catalog-metadata workspace, not yet a checkout/royalty/payment system. Admin Console is intentionally a locked UI shell until server-side roles and operations are implemented. Production media engines are not yet connected.
+NARATIVA has a real Supabase project and a partial creator-to-reader persistence path. The path is implemented in code, but a full account-level save → publish → public-read test remains outstanding. Commerce is a catalog-metadata workspace, not yet a checkout/royalty/payment system. Admin Console now has a server-verified, read-only metrics foundation; it stays locked until an operator is explicitly assigned the platform_admin role. Moderation and other privileged actions remain disabled. Production media engines are not yet connected.
 
 ## Feature status matrix
 
@@ -23,20 +23,20 @@ NARATIVA has a real Supabase project and a partial creator-to-reader persistence
 | Published works in Reader Space | **Partially connected** | Reader queries published rows and the latest canonical version. Current production table row count is zero, so no live creator work was available to verify. |
 | Asset upload | **Implemented; needs permission test** | Creator uploads to private `narativa-assets` bucket and uses short-lived signed URLs. Test owner isolation and expiry. |
 | Story pipeline | **Active scaffold, not generative AI** | Edge Function `story-pipeline` returns deterministic scene segmentation and explicitly reports language/image/speech/video generation and persistence as false. |
-| Commerce catalog metadata | **Partially connected** | Reads creator-owned books and stores type, reference price, and rights metadata on the book. No checkout, order sync, payment settlement, or royalty payout is implemented. |
+| Commerce catalog | **Dedicated product catalog foundation** | This change separates product/listing metadata into `commerce_products` with owner-scoped RLS. Orders and royalty tables are server-write-only foundations; no checkout, payment settlement, or payout is implemented. |
 | Etsy connector | **Backend deployed; connection not verified** | OAuth function exists, but successful OAuth depends on server secrets, registered callback and vendor authorization. Listing/order sync is not active. |
 | WooCommerce connector | **Backend deployed; connection not verified** | Function and credential table exist; store connection and product/order sync still require real configuration and verification. |
 | Other vendor cards | **UI/documentation only** | Cards open official documentation; they do not establish an active API connection. |
-| Admin Console | **UI shell only / privileged access disabled** | Page explicitly says server-side admin role, provisioning, moderation workflows, and operational data are not connected. |
+| Admin Console | **Read-only metrics foundation** | A JWT-verified Edge Function checks `platform_admin_roles`, returns aggregate metrics only, and logs access. No account is automatically granted admin; moderation and other privileged actions remain disabled. |
 | Payments, royalties, disputes | **Not implemented** | No verified payment provider/settlement flow or royalty ledger in the current user journey. |
 | AI image, audio/TTS, video, mesh/rig, camera AR | **Not connected as production engines** | Studio creates briefs/plans and supports local imports/previews; final media requires provider/runtime integration. |
 
 ## Live backend findings
 
 - Supabase project is active and the core tables exist, including `profiles`, `books`, `book_versions`, `book_assets`, reading progress, AI sessions/messages, and collective-intelligence tables.
-- The core creator/content tables reported zero rows during this audit; that does not prove the save flow is broken, but means there is no existing live work to use as an end-to-end fixture.
-- Live migration history contains nine entries, while the repository's `supabase/migrations/` directory currently contains only the two recent connector migration files. The core database schema therefore is not fully reproducible from the repository migration directory. **Fix migration-source parity before disaster recovery or another environment is attempted.**
-- Supabase security advisor reported leaked-password protection disabled.
+- The Auth schema contains one account, while `books`, `book_versions`, and `book_assets` reported zero rows during this audit; that does not prove the save flow is broken, but means there is no existing live work to use as an end-to-end fixture.
+- Live migration history contained nine entries before the admin-console migration was applied; the repository still does not contain the original core migrations. Connector and new additive migrations are tracked, but full database recreation is not yet reproducible from the repository. The core database schema therefore is not fully reproducible from the repository migration directory. **Fix migration-source parity before disaster recovery or another environment is attempted.**
+- Supabase security advisor reported leaked-password protection disabled. This remains a project Auth setting that must be enabled in the Supabase dashboard.
 - Advisor reported three connector credential/state tables with RLS enabled and no policies. These tables also revoke browser-role access and grant service-role access; that can be intentional for server-only secrets. Keep them inaccessible to browser roles and document the server-only design.
 - Performance advisor reported unindexed foreign keys on Etsy OAuth state and repeated auth-function evaluations in RLS policies. These are optimization findings, not proof of unauthorized access.
 
