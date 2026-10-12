@@ -8,6 +8,7 @@ const admin = read('../website/admin.html');
 const adminClient = read('../website/admin-console.js');
 const adminFunction = read('../supabase/functions/admin-console/index.ts');
 const adminMigration = read('../supabase/migrations/202610120001_narativa_secure_admin_console.sql');
+const commerceMigration = read('../supabase/migrations/202610120002_narativa_commerce_catalog_ledger.sql');
 const experiences = read('../website/experiences.js');
 const failures = [];
 
@@ -34,9 +35,12 @@ check('Reader only fetches published books',
 check('Reader resolves latest canonical version',
   /from\(['"]book_versions['"]\)\.select\(['"]canonical_content,version_number['"]\)\.eq\(['"]book_id['"],\s*book\.id\)\.order\(['"]version_number['"],\s*\{\s*ascending:\s*false\s*\}\)/.test(experiences),
   'Reader must use the latest saved version for each published work.');
-check('Commerce labels metadata versus transactions',
-  /transaksi dan vendor belum terhubung/i.test(experiences) && /Pesanan tersinkron/.test(commerce),
-  'Commerce must not present metadata catalog as completed transaction processing.');
+check('Commerce uses a dedicated product table and discloses missing checkout',
+  /from\(['\"]commerce_products['\"]\)/.test(experiences) && /Checkout, pembayaran, dan royalti masih menunggu integrasi server/i.test(experiences) && /Pesanan tersinkron/.test(commerce),
+  'Commerce must persist product records separately and not imply payment processing is live.');
+check('Commerce ledger is server-write-only with owner-scoped product access',
+  /create table if not exists public\.commerce_orders/i.test(commerceMigration) && /create table if not exists public\.royalty_ledger/i.test(commerceMigration) && /commerce_products_read_active_or_owner/i.test(commerceMigration) && /revoke all on table public\.commerce_orders from anon, authenticated, public/i.test(commerceMigration),
+  'Orders and royalties must be server-written, while product access remains owner-scoped.');
 check('Admin console remains fail-closed',
   /PRIVILEGED ACCESS DISABLED/.test(admin) && /server-side/i.test(admin),
   'Admin UI must remain locked until server-side authorization exists.');
