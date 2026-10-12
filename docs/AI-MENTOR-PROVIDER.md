@@ -13,7 +13,7 @@ The adapter requires a valid Supabase session and explicit per-request consent, 
 
 ## Current live status
 
-The Edge Function can be deployed without the provider key, but generative responses remain unavailable until `NARATIVA_AI_API_KEY` is configured in Supabase Edge Function secrets. When the secret is absent, the endpoint returns `provider_not_configured`; the Creator Studio continues to show built-in contextual guidance instead.
+The Edge Function is deployed, but the connected tooling does not expose the value/presence of Edge Function secrets, so live generative responses have not been verified. If `NARATIVA_AI_API_KEY` is absent, the endpoint returns `provider_not_configured`; Creator Studio continues to show built-in contextual guidance. Configure and test the key through Supabase Edge Function secrets without placing it in the browser or source control.
 
 ## Scope
 
