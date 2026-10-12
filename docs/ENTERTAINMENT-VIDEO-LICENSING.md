@@ -81,3 +81,12 @@ Not yet implemented:
 - Production video hosting, signed playback, content reporting, and rights-management administration
 
 The prototype must not be represented as a complete rights-cleared global video catalog.
+
+
+## Universal Watch platform picker
+
+The website provides a client-side platform picker for Internet Archive, YouTube, TikTok, Melolo, and user-supplied URLs. Search queries are sent to the selected platform's public website by opening its search page; this is not an authenticated API integration. If the user's browser already has a valid session on that service, the service may recognize it, but NARATIVA does not access the account or guarantee single sign-on.
+
+For Internet Archive URLs matching `/details/{identifier}` or `/embed/{identifier}`, the site may use the official `https://archive.org/embed/{identifier}` player. This is only a playback convenience, not a rights determination. Each item still requires a separate review of rights, availability, and terms. If embed is unavailable, open the original item page.
+
+Current limitations: no account linking or OAuth, no platform API credentials, no cross-service account synchronization, no guarantee that every provider's search URL remains stable, and no automatic rights verification. Never collect third-party account passwords.
