@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, extname } from 'node:path';
 
@@ -8,7 +7,6 @@ const htmlFiles = [];
 const allFiles = [];
 function walk(dir) {
   for (const item of readdirSync(dir)) {
-    if (item === 'vendor') continue;
     const full = join(dir, item);
     if (statSync(full).isDirectory()) walk(full);
     else {
