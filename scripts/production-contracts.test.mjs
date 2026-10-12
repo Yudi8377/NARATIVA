@@ -5,6 +5,9 @@ const creator = read('../website/creator.html');
 const reader = read('../website/reader.html');
 const commerce = read('../website/commerce.html');
 const admin = read('../website/admin.html');
+const adminClient = read('../website/admin-console.js');
+const adminFunction = read('../supabase/functions/admin-console/index.ts');
+const adminMigration = read('../supabase/migrations/202610120001_narativa_secure_admin_console.sql');
 const experiences = read('../website/experiences.js');
 const failures = [];
 
@@ -37,6 +40,15 @@ check('Commerce labels metadata versus transactions',
 check('Admin console remains fail-closed',
   /PRIVILEGED ACCESS DISABLED/.test(admin) && /server-side/i.test(admin),
   'Admin UI must remain locked until server-side authorization exists.');
+check('Admin page loads the secure console client after Supabase SDK',
+  admin.indexOf('vendor/supabase.js') >= 0 && admin.indexOf('admin-console.js') > admin.indexOf('vendor/supabase.js'),
+  'The secure admin client must load after the Supabase SDK.');
+check('Admin function checks server-owned role and writes audit events',
+  /auth\.getUser\(token\)/.test(adminFunction) && /from\(['\"]platform_admin_roles['\"]\)/.test(adminFunction) && /from\(['\"]platform_audit_events['\"]\)/.test(adminFunction),
+  'Privileged metrics must require a server-owned role and create audit events.');
+check('Admin governance tables are inaccessible to browser roles',
+  /enable row level security/i.test(adminMigration) && /revoke all on table public\.platform_admin_roles from anon, authenticated, public/i.test(adminMigration),
+  'Admin role table must be RLS-enabled and inaccessible to browser roles.');
 check('Story pipeline requires explicit consent and a session',
   /if\s*\(!\$\('aiPermission'\)\.checked\)/.test(experiences) &&
   /if\s*\(!sessionData\.session\)/.test(experiences) &&
