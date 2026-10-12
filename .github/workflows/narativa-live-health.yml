@@ -27,7 +27,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: narativa-live-health-\${{ github.run_number }}
+          name: narativa-live-health-${{ github.run_number }}
           path: artifacts/narativa-live-health.*
           if-no-files-found: warn
           retention-days: 30
