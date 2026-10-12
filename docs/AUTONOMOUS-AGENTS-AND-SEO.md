@@ -15,6 +15,15 @@ The GitHub Actions workflow \`.github/workflows/narativa-autonomous-agents.yml\`
 | Supabase security contracts | Checks selected Edge Function authentication patterns and production-job RLS/grants |
 | Live health monitor | Every six hours probes key public journeys, retries transient errors, records HTTP status and response latency |
 
+## Optional model-assisted review
+
+The deterministic audit works without an AI provider. To enable the optional model review, configure the following in GitHub repository Settings → Secrets and variables → Actions:
+- Secret `NARATIVA_AI_API_KEY`: provider API key, stored as a secret and never committed.
+- Optional variable `NARATIVA_AI_BASE_URL`: full OpenAI-compatible chat-completions endpoint; defaults to the OpenAI endpoint.
+- Optional variable `NARATIVA_AI_MODEL`: model name; defaults to `gpt-4o-mini`.
+
+The model receives only a compact summary of audit findings, not source files, user content, or environment secrets. Provider failure does not override deterministic test results. The model writes recommendations only; it does not automatically patch or publish production code.
+
 ## SEO baseline
 
 - Maintain a single canonical host and a clean sitemap containing indexable public pages only.
