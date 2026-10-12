@@ -5,6 +5,8 @@ const creator = read('../website/creator.html');
 const reader = read('../website/reader.html');
 const commerce = read('../website/commerce.html');
 const admin = read('../website/admin.html');
+const aiMentorFunction = read('../supabase/functions/ai-mentor/index.ts');
+const aiMentorMigration = read('../supabase/migrations/20261012015700_narativa_ai_mentor_usage.sql');
 const adminClient = read('../website/admin-console.js');
 const adminFunction = read('../supabase/functions/admin-console/index.ts');
 const adminMigration = read('../supabase/migrations/20261012015258_narativa_secure_admin_console.sql');
@@ -53,6 +55,14 @@ check('Admin function checks server-owned role and writes audit events',
 check('Admin governance tables are inaccessible to browser roles',
   /enable row level security/i.test(adminMigration) && /revoke all on table public\.platform_admin_roles from anon, authenticated, public/i.test(adminMigration),
   'Admin role table must be RLS-enabled and inaccessible to browser roles.');
+check('AI Mentor requires explicit consent and keeps prompts out of the usage table',
+  /id="mentorConsent"/.test(creator) &&
+  /functions\.invoke\(['"]ai-mentor['"]/.test(experiences) &&
+  /payload\.consent !== true/.test(aiMentorFunction) &&
+  /30/.test(aiMentorFunction) &&
+  /revoke all on table public\.ai_mentor_usage from anon, authenticated, public/i.test(aiMentorMigration) &&
+  !/\b(prompt|question|manuscript)\s+text\b/i.test(aiMentorMigration),
+  'AI Mentor must require per-request consent, rate-limit requests, and avoid storing prompt content.');
 check('Story pipeline requires explicit consent and a session',
   /if\s*\(!\$\('aiPermission'\)\.checked\)/.test(experiences) &&
   /if\s*\(!sessionData\.session\)/.test(experiences) &&
