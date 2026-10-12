@@ -37,6 +37,7 @@ jobs:
           node --check scripts/site-smoke.test.mjs
           node --check scripts/supabase-security-contracts.test.mjs
           node --check scripts/live-healthcheck.mjs
+          node --check scripts/ai-audit-review.mjs
           node --check website/app.js
           node --check website/reader-catalog.js
           node --check website/experiences.js
@@ -45,11 +46,19 @@ jobs:
           node scripts/supabase-security-contracts.test.mjs
       - name: Agent — SEO, security, performance, accessibility, functional audit
         run: node scripts/narativa-agents-audit.mjs
+      - name: Optional AI reviewer — prioritize findings
+        if: always()
+        continue-on-error: true
+        env:
+          NARATIVA_AI_API_KEY: ${{ secrets.NARATIVA_AI_API_KEY }}
+          NARATIVA_AI_BASE_URL: ${{ vars.NARATIVA_AI_BASE_URL }}
+          NARATIVA_AI_MODEL: ${{ vars.NARATIVA_AI_MODEL }}
+        run: node scripts/ai-audit-review.mjs
       - name: Store audit report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: narativa-quality-report-${{ github.run_number }}
-          path: artifacts/narativa-quality-report.*
+          path: artifacts/narativa-*
           if-no-files-found: warn
           retention-days: 30
