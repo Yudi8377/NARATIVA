@@ -9,6 +9,7 @@ const aiMentorFunction = read('../supabase/functions/ai-mentor/index.ts');
 const aiMentorMigration = read('../supabase/migrations/20261012020021_narativa_ai_mentor_usage.sql');
 const productionEngine = read('../supabase/functions/production-engine/index.ts');
 const productionMigration = read('../supabase/migrations/20261012020535_narativa_production_jobs.sql');
+const rlsOptimization = read('../supabase/migrations/20261012020800_narativa_rls_initplan_optimization.sql');
 const adminClient = read('../website/admin-console.js');
 const adminFunction = read('../supabase/functions/admin-console/index.ts');
 const adminMigration = read('../supabase/migrations/20261012015258_narativa_secure_admin_console.sql');
@@ -74,6 +75,10 @@ check('Production engine requires consent, owned project and private asset stora
   /createSignedUrl\(path, 60\)/.test(productionEngine) &&
   /revoke all on table public\.production_jobs from anon, authenticated, public/i.test(productionMigration),
   'Image/speech jobs must require consent and ownership, store private assets, and keep job writes server-only.');
+check('RLS auth.uid calls are optimized without changing predicates',
+  (rlsOptimization.match(/ALTER POLICY/g) || []).length === 32 &&
+  /\(select auth\.uid\(\)\)/i.test(rlsOptimization),
+  'Existing policies should use scalar subqueries for auth.uid to avoid per-row re-evaluation.');
 check('Story pipeline requires explicit consent and a session',
   /if\s*\(!\$\('aiPermission'\)\.checked\)/.test(experiences) &&
   /if\s*\(!sessionData\.session\)/.test(experiences) &&
