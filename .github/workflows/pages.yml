@@ -38,6 +38,9 @@ jobs:
           grep -q 'youtube-nocookie.com/embed' website/video.js
           grep -q 'narativa.video.external-sources' website/video.js
           test -s website/admin-console.js
+          test -s supabase/functions/publish-work/index.ts
+          test -s .github/workflows/e2e-creator-reader.yml
+          test -s docs/E2E-CREATOR-READER.md
           test -s supabase/functions/admin-console/index.ts
           test -s supabase/functions/ai-mentor/index.ts
           test -s supabase/functions/production-engine/index.ts
@@ -65,6 +68,7 @@ jobs:
           node --check website/experiences.js
           node --check scripts/library-import.mjs
           node --check scripts/production-contracts.test.mjs
+          node --check scripts/e2e-creator-reader.mjs
           node scripts/production-contracts.test.mjs
           node -e "JSON.parse(require('fs').readFileSync('scripts/library-sources.json','utf8'))"
           test -s docs/library-importer.md

@@ -1,0 +1,26 @@
+name: NARATIVA authenticated creator-reader E2E
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  creator-reader:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: https://hdsqwkydgruyfbqqwhdk.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_m24u_7V16Y-bq_B_YydL-w_dw_4bOb8
+      NARATIVA_E2E_EMAIL: ${{ secrets.NARATIVA_E2E_EMAIL }}
+      NARATIVA_E2E_PASSWORD: ${{ secrets.NARATIVA_E2E_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run authenticated creator → reader test
+        run: node scripts/e2e-creator-reader.mjs
