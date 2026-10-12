@@ -76,7 +76,7 @@ The Entertainment page currently provides:
 - A local-only creator submission preview that stores data on the current browser only
 
 Not yet implemented:
-- Real creator uploads, authenticated submissions, cloud media storage, or a shared catalog
+- Real creator uploads, authenticated submissions, cloud media storage, or a shared catalog\n- Cross-device synchronization of user-added links (the current list uses browser local storage)\n- Official API integrations, partner credentials, automatic metadata lookup, or guaranteed embeds for every platform
 - Automatic source/API ingestion, license verification, moderation, recommendations, or watch history
 - Production video hosting, signed playback, content reporting, and rights-management administration
 

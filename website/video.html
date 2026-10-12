@@ -27,7 +27,18 @@
 </section>
 <section class="video-content wrap" id="watch">
 <div class="video-section-heading"><div><div class="eyebrow">YOUR NEXT FAVORITE</div><h2>Ruang <em>menonton</em></h2></div><p>Telusuri karya dan media terbuka. Pilih kartu untuk memutar video atau membuka halaman sumber aslinya.</p></div>
-<div class="video-toolbar"><label class="video-search"><span>⌕</span><input id="videoSearch" type="search" placeholder="Cari judul, genre, kreator, atau sumber..." aria-label="Cari video"></label><div class="video-filters" role="group" aria-label="Filter video"><button class="filter-chip active" data-filter="all">Semua</button><button class="filter-chip" data-filter="creator">Karya kreator</button><button class="filter-chip" data-filter="open">Open cinema</button><button class="filter-chip" data-filter="documentary">Dokumenter</button></div></div>
+<div class="video-toolbar"><label class="video-search"><span>⌕</span><input id="videoSearch" type="search" placeholder="Cari judul, genre, kreator, atau sumber..." aria-label="Cari video"></label><div class="video-filters" role="group" aria-label="Filter video"><button class="filter-chip active" data-filter="all">Semua</button><button class="filter-chip" data-filter="creator">Karya kreator</button><button class="filter-chip" data-filter="open">Open cinema</button><button class="filter-chip" data-filter="documentary">Dokumenter</button><button class="filter-chip" data-filter="external">Platform eksternal</button></div></div>
+<div class="watch-source-panel">
+  <div class="watch-source-copy"><span class="eyebrow">UNIVERSAL WATCH</span><h3>Tambahkan <em>sumber tontonan</em></h3><p>Tempel tautan video dari YouTube, TikTok, Melolo, atau situs lain. NARATIVA akan mengenali sumbernya, menyematkan pemutar resmi bila didukung, atau membuka situs aslinya.</p></div>
+  <form id="watchSourceForm" class="watch-source-form">
+    <label for="watchSourceUrl">Tautan video</label>
+    <input id="watchSourceUrl" name="url" type="url" required maxlength="2000" placeholder="https://youtu.be/... atau tautan video lain">
+    <label for="watchSourceTitle">Nama tontonan (opsional)</label>
+    <input id="watchSourceTitle" name="title" maxlength="120" placeholder="Misalnya: Drama favorit saya">
+    <div class="watch-source-actions"><button class="button primary" type="submit">Tambahkan ke ruang saya ↗</button><span id="watchSourceFeedback" role="status" aria-live="polite"></span></div>
+    <p class="watch-source-footnote">Sumber yang ditambahkan tersimpan di browser ini saja. Tautan tidak diunggah, disalin, atau dipublikasikan ke katalog umum.</p>
+  </form>
+</div>
 <div class="video-featured" id="featuredPlayer">
 <div class="player-empty"><div class="player-symbol">▶</div><h3>Pilih sebuah video untuk mulai menonton</h3><p>Pemutar akan menampilkan video dari sumber yang tercantum pada kartu.</p></div>
 </div>
