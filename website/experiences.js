@@ -654,7 +654,37 @@
     });
     async function outline() {
       const raw = $('workText').value.trim();
-      if (raw.length < 80) { setNotice('Tambahkan minimal 80 karakter agar pipeline dapat memetakan adegan.', 'error'); return; }
+      if (raw.length < 80) { setNotice('Tambahkan minimal 80 karakter agar modul dapat menyusun hasil produksi.', 'error'); return; }
+      if (['video','3d','audio','learning'].includes(mode)) {
+        const result = $('outlineResult'); result.replaceChildren();
+        const lines = raw.split(/\\n+/).map(line => line.trim()).filter(Boolean);
+        const blocks = mode === 'video'
+          ? lines.map((line,i) => ({title:'SHOT '+String(i+1).padStart(2,'0'), body:line, note:'Tentukan durasi, ukuran shot, gerak kamera, kontinuitas, dan audio sebelum render.'}))
+          : mode === '3d'
+          ? [
+              {title:'GEOMETRI & SKALA',body:lines.find(line => /objek|geometri|siluet|skala/i.test(line)) || 'Lengkapi bentuk utama, proporsi, ukuran nyata, dan level detail.',note:'Keluaran saat ini adalah spesifikasi teks; belum menghasilkan mesh 3D.'},
+              {title:'MATERIAL & PENCahayaan',body:lines.find(line => /material|tekstur|cahaya|lighting/i.test(line)) || 'Tentukan material, tekstur, roughness, sumber cahaya, dan lingkungan.',note:'Siapkan referensi visual dan lisensi tekstur.'},
+              {title:'RIG / ANIMASI',body:lines.find(line => /rig|animasi|gerak/i.test(line)) || 'Tentukan kebutuhan rig, pose, loop gerak, dan titik pivot.',note:'Rigging otomatis belum tersedia tanpa engine 3D.'},
+              {title:'EKSPOR',body:lines.find(line => /ekspor|glb|gltf|obj|stl/i.test(line)) || 'Pilih GLB/GLTF untuk web, OBJ untuk pertukaran mesh, atau STL untuk cetak 3D.',note:'Impor berkas model tersedia lewat Asset Inbox.'}
+            ]
+          : mode === 'audio'
+          ? lines.map((line,i) => ({title:'CUE '+String(i+1).padStart(2,'0'),body:line,note:'Tentukan pembicara, emosi, tempo, level, dan titik masuk/keluar.'}))
+          : lines.map((line,i) => ({title:'INTERAKSI '+String(i+1).padStart(2,'0'),body:line,note:'Tentukan pemicu, respons visual/audio, aksesibilitas, dan cara menguji pemahaman.'}));
+        blocks.forEach(block => {
+          const article = document.createElement('article');
+          const h = document.createElement('h4'); h.textContent = block.title;
+          const p = document.createElement('p'); p.textContent = block.body;
+          const small = document.createElement('small'); small.textContent = block.note;
+          article.append(h,p,small); result.appendChild(article);
+        });
+        const note = document.createElement('article');
+        const h = document.createElement('h4'); h.textContent = 'BATASAN MODUL';
+        const p = document.createElement('p');
+        p.textContent = mode === 'video' ? 'Breakdown shot dibuat dari baris brief di browser. Video final belum dirender; sambungkan provider video AI untuk menghasilkan klip.' : mode === '3d' ? 'Spesifikasi 3D disusun sebagai checklist produksi. Mesh, rig, tekstur, dan render final memerlukan engine/provider 3D.' : mode === 'audio' ? 'Cue audio disusun dari naskah. File suara belum disintesis; sambungkan provider TTS/audio untuk hasil audio final.' : 'Rencana interaksi disusun sebagai brief. AR kamera langsung memerlukan runtime AR dan aset yang sesuai.';
+        note.append(h,p); result.appendChild(note); result.hidden = false;
+        setNotice('Brief ' + mode.toUpperCase() + ' dipecah menjadi ' + blocks.length + ' bagian. Ini alat perencanaan lokal, bukan render AI final.', 'success');
+        return;
+      }
       if (!$('aiPermission').checked) { setNotice('Naskah tidak dikirim. Centang izin pemrosesan AI terlebih dahulu jika Anda ingin mengirim naskah ke story pipeline.', 'error'); return; }
       if (!db) { setNotice('Pipeline belum siap karena library Supabase belum termuat.', 'error'); return; }
       const { data: sessionData } = await db.auth.getSession();
