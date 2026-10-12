@@ -736,7 +736,7 @@
         article.append(num,body); output.appendChild(article);
       });
       $('dedicatedOutputTitle').textContent=title; $('dedicatedOutputNote').textContent=note; $('dedicatedOutput').hidden=false;
-      const markdown='# '+($('workTitle').value.trim()||title)+'\\n\\n'+sections.map((s,i)=>'## '+String(i+1).padStart(2,'0')+' — '+s.title+'\\n\\n'+(s.body||'')+(s.meta?'\\n\\nCatatan: '+s.meta:'')).join('\\n\\n');
+      const markdown='# '+($('workTitle').value.trim()||title)+'\n\n'+sections.map((s,i)=>'## '+String(i+1).padStart(2,'0')+' — '+s.title+'\n\n'+(s.body||'')+(s.meta?'\n\nCatatan: '+s.meta:'')).join('\n\n');
       editor.value=markdown; editor.dataset.lastStudioSample='false'; updateEditorCount(); lastStoryboard=null;
       setNotice('Hasil workspace tersusun. Periksa panel hasil lalu pilih “Simpan proyek & hasil” untuk menyimpan.', 'success');
     }
@@ -753,12 +753,12 @@
         renderWorkspaceResult('Timeline & shot list',sections,'Status: perencanaan produksi. Ini bukan file video hasil render; provider video AI perlu dihubungkan untuk menghasilkan klip.');
       } else if(kind==='comic'){
         const pages=Math.max(1,Math.min(100,Number(workspaceCopy('comicPages')||1))),panels=Math.max(1,Math.min(12,Number(workspaceCopy('comicPanels')||6)));
-        const dialogue=workspaceCopy('comicDialogue').split(/(?<=[.!?])\\s+|\\n+/).filter(Boolean);
+        const dialogue=workspaceCopy('comicDialogue').split(/(?<=[.!?])\\s+|\n+/).filter(Boolean);
         sections.push({title:'ART DIRECTION',body:workspaceCopy('comicScene'),meta:workspaceCopy('comicStyle')+' · '+pages+' halaman'});
         for(let p=1;p<=pages;p++)for(let n=1;n<=panels;n++){const index=(p-1)*panels+n;sections.push({title:'HALAMAN '+p+' · PANEL '+n,body:dialogue[(index-1)%Math.max(1,dialogue.length)]||'Tentukan aksi, ekspresi, latar, dan sudut pandang untuk panel ini.',meta:'Komposisi panel · balon dialog · SFX · kontinuitas visual'});}
         renderWorkspaceResult('Layout panel komik',sections,'Status: storyboard tekstual. Ilustrasi panel final memerlukan generator gambar atau aset gambar yang diunggah.');
       } else if(kind==='audio'){
-        const cues=workspaceCopy('audioCues').split(/\\n+/).filter(Boolean);
+        const cues=workspaceCopy('audioCues').split(/\n+/).filter(Boolean);
         sections.push({title:'KONSEP & FORMAT',body:workspaceCopy('audioConcept'),meta:workspaceCopy('audioType')+' · '+workspaceCopy('audioDuration')+' · '+workspaceCopy('audioVoice')});
         cues.forEach((cue,i)=>sections.push({title:'CUE '+String(i+1).padStart(2,'0'),body:cue,meta:'Tentukan timing, level, fade, dan posisi stereo.'}));
         if(!cues.length) sections.push({title:'CUE AWAL',body:'Tambahkan dialog, SFX, musik, dan jeda untuk setiap adegan.',meta:'Belum ada cue yang ditulis.'});
