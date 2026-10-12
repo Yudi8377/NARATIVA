@@ -30,12 +30,17 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Validate connector manager assets
         run: |
+          test -s website/video.html
+          grep -q 'watchSourceForm' website/video.html
+          grep -q 'youtube-nocookie.com/embed' website/video.js
+          grep -q 'narativa.video.external-sources' website/video.js
           test -s website/connector-manager.html
           test -s website/connector-manager.js
           test -s website/experience.css
           test -s website/vendor/supabase.js
           node --check website/connector-manager.js
           node --check website/learning.js
+          node --check website/video.js
           node --check website/reader-catalog.js
           node --check website/experiences.js
           node --check scripts/library-import.mjs
