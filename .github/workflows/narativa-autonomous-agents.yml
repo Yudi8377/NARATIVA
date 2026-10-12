@@ -1,0 +1,50 @@
+name: NARATIVA Autonomous Quality Agents
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - "scripts/**"
+      - "supabase/**"
+      - ".github/workflows/narativa-autonomous-agents.yml"
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: narativa-autonomous-audit
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Multi-agent quality gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Agent — syntax and existing production contracts
+        run: |
+          node --check scripts/narativa-agents-audit.mjs
+          node --check website/app.js
+          node --check website/reader-catalog.js
+          node --check website/experiences.js
+          node scripts/production-contracts.test.mjs
+      - name: Agent — SEO, security, performance, accessibility, functional audit
+        run: node scripts/narativa-agents-audit.mjs
+      - name: Preserve private audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narativa-quality-report-\${{ github.run_number }}
+          path: artifacts/narativa-quality-report.*
+          if-no-files-found: warn
+          retention-days: 30
