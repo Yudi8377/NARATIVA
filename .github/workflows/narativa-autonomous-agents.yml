@@ -34,10 +34,15 @@ jobs:
       - name: Agent — syntax and existing production contracts
         run: |
           node --check scripts/narativa-agents-audit.mjs
+          node --check scripts/site-smoke.test.mjs
+          node --check scripts/supabase-security-contracts.test.mjs
+          node --check scripts/live-healthcheck.mjs
           node --check website/app.js
           node --check website/reader-catalog.js
           node --check website/experiences.js
           node scripts/production-contracts.test.mjs
+          node scripts/site-smoke.test.mjs
+          node scripts/supabase-security-contracts.test.mjs
       - name: Agent — SEO, security, performance, accessibility, functional audit
         run: node scripts/narativa-agents-audit.mjs
       - name: Store audit report
