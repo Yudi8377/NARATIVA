@@ -30,7 +30,7 @@ NARATIVA has a real Supabase project and a partial creator-to-reader persistence
 | Other vendor cards | **UI/documentation only** | Cards open official documentation; they do not establish an active API connection. |
 | Admin Console | **Read-only metrics foundation** | A JWT-verified Edge Function checks `platform_admin_roles`, returns aggregate metrics only, and logs access. No account is automatically granted admin; moderation and other privileged actions remain disabled. |
 | Payments, royalties, disputes | **Not implemented** | No verified payment provider/settlement flow or royalty ledger in the current user journey. |
-| AI image, audio/TTS, video, mesh/rig, camera AR | **Not connected as production engines** | Studio creates briefs/plans and supports local imports/previews; final media requires provider/runtime integration. |
+| AI image and speech | **Server adapter implemented; provider secret status unverified** | Creator Studio can request image or TTS generation, requires per-request consent, stores output in private Storage, and links it to the selected work. Successful live generation still needs a verified provider key and authenticated test. |\n| AI video, 3D mesh/rig, camera AR | **Not connected as production engines** | Video and 3D need provider-specific APIs/runtime; AR needs a camera runtime and compatible assets. The OpenAI Videos/Sora API is no longer an option after its 2026 deprecation. |
 
 ## Live backend findings
 
