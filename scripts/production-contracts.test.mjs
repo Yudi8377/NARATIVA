@@ -53,8 +53,11 @@ check('Commerce ledger is server-write-only with owner-scoped product access',
   /create table if not exists public\.commerce_orders/i.test(commerceMigration) && /create table if not exists public\.royalty_ledger/i.test(commerceMigration) && /commerce_products_read_active_or_owner/i.test(commerceMigration) && /revoke all on table public\.commerce_orders from anon, authenticated, public/i.test(commerceMigration),
   'Orders and royalties must be server-written, while product access remains owner-scoped.');
 check('Admin console remains fail-closed',
-  /PRIVILEGED ACCESS DISABLED/.test(admin) && /server-side/i.test(admin),
-  'Admin UI must remain locked until server-side authorization exists.');
+  /id="adminLoginForm"/.test(admin) &&
+  /platform_admin/.test(admin) &&
+  /data\.ok/.test(adminClient) &&
+  /platform_admin_roles/.test(adminFunction),
+  'Admin UI must require a sign-in form and a server-confirmed platform_admin role before showing operational metrics.');
 check('Admin page loads the secure console client after Supabase SDK',
   admin.indexOf('vendor/supabase.js') >= 0 && admin.indexOf('admin-console.js') > admin.indexOf('vendor/supabase.js'),
   'The secure admin client must load after the Supabase SDK.');
