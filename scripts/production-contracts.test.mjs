@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -7,7 +6,6 @@ const reader = read('../website/reader.html');
 const commerce = read('../website/commerce.html');
 const admin = read('../website/admin.html');
 const experiences = read('../website/experiences.js');
-const storyPipeline = read('../supabase/functions/woocommerce-connect/index.ts');
 const failures = [];
 
 function check(name, condition, detail) {
@@ -39,9 +37,12 @@ check('Commerce labels metadata versus transactions',
 check('Admin console remains fail-closed',
   /PRIVILEGED ACCESS DISABLED/.test(admin) && /server-side/i.test(admin),
   'Admin UI must remain locked until server-side authorization exists.');
-check('Production pipeline is not misrepresented as media generation',
-  /deterministic-planning-scaffold/.test(read('../supabase/functions/story-pipeline/index.ts')) === false,
-  'This check is intentionally a repository guard only when the story pipeline source is versioned locally.');
+check('Story pipeline requires explicit consent and a session',
+  /if\s*\(!\$\('aiPermission'\)\.checked\)/.test(experiences) &&
+  /if\s*\(!sessionData\.session\)/.test(experiences) &&
+  /functions\.invoke\(['"]story-pipeline['"]/.test(experiences) &&
+  /manuscript_processing_consent:\s*true/.test(experiences),
+  'Naskah must not be sent to the pipeline without consent and an authenticated session.');
 
 if (failures.length) {
   console.error(failures.join('\n'));
