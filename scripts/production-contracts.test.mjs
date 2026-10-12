@@ -5,6 +5,7 @@ const creator = read('../website/creator.html');
 const reader = read('../website/reader.html');
 const commerce = read('../website/commerce.html');
 const admin = read('../website/admin.html');
+const publishFunction = read('../supabase/functions/publish-work/index.ts');
 const aiMentorFunction = read('../supabase/functions/ai-mentor/index.ts');
 const aiMentorMigration = read('../supabase/migrations/20261012020021_narativa_ai_mentor_usage.sql');
 const productionEngine = read('../supabase/functions/production-engine/index.ts');
@@ -31,9 +32,14 @@ check('Reader loads Supabase SDK before app logic',
 check('Creator saves canonical versions',
   /from\(['"]book_versions['"]\)\.insert/.test(experiences) && /canonical_content:\s*canonical/.test(experiences),
   'Saving must create a version with canonical_content.');
-check('Creator publication is owner-scoped',
-  /update\(\{\s*status:\s*['"]published['"]\s*\}\)\.eq\(['"]id['"],\s*book\.id\)\.eq\(['"]owner_id['"],\s*signedInUser\.id\)/.test(experiences),
-  'Publication status update must be constrained to the current owner.');
+check('Creator publication uses a guarded server endpoint',
+  /functions\.invoke\(['"]publish-work['"]/.test(experiences) &&
+  /auth\.getUser\(token\)/.test(publishFunction) &&
+  /eq\("owner_id", user\.id\)/.test(publishFunction) &&
+  /body\.rights_confirmed !== true/.test(publishFunction) &&
+  /book_versions/.test(publishFunction) &&
+  /platform_audit_events/.test(publishFunction),
+  'Publication must verify session, ownership, rights, latest version, and server audit logging.');
 check('Reader only fetches published books',
   /from\(['"]books['"]\)\.select\([^;]+?\)\.eq\(['"]status['"],\s*['"]published['"]\)/s.test(experiences),
   'Reader catalogue query must filter status=published.');
@@ -79,6 +85,10 @@ check('RLS auth.uid calls are optimized without changing predicates',
   (rlsOptimization.match(/ALTER POLICY/g) || []).length === 32 &&
   /\(select auth\.uid\(\)\)/i.test(rlsOptimization),
   'Existing policies should use scalar subqueries for auth.uid to avoid per-row re-evaluation.');
+check('E2E harness uses server-side publication and cleans temporary fixtures',
+  /functions\/v1\/publish-work/.test(read('../scripts/e2e-creator-reader.mjs')) &&
+  /CLEANUP temporary E2E work removed/.test(read('../scripts/e2e-creator-reader.mjs')),
+  'The authenticated E2E test must use the guarded publish endpoint and clean up temporary rows.');
 check('Story pipeline requires explicit consent and a session',
   /if\s*\(!\$\('aiPermission'\)\.checked\)/.test(experiences) &&
   /if\s*\(!sessionData\.session\)/.test(experiences) &&
