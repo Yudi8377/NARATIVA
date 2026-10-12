@@ -42,7 +42,7 @@ jobs:
           test -s supabase/functions/ai-mentor/index.ts
           test -s supabase/functions/production-engine/index.ts
           test -s supabase/migrations/20261012020535_narativa_production_jobs.sql
-          test -s supabase/migrations/20261012020800_narativa_rls_initplan_optimization.sql
+          test -s supabase/migrations/20261012020916_narativa_rls_initplan_optimization.sql
           test -s docs/RLS-PERFORMANCE.md
           test -s supabase/migrations/20261012020657_narativa_production_asset_index.sql
           test -s docs/PRODUCTION-ENGINES.md
