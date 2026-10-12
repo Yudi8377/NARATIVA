@@ -33,6 +33,14 @@
   const getEmbed = (url, provider) => {
     try {
       const parsed = new URL(url);
+      if (provider === "archive" && (parsed.hostname === "archive.org" || parsed.hostname.endsWith(".archive.org"))) {
+        const match = parsed.pathname.match(/^\/(?:details|embed)\/([^/?#]+)/);
+        if (match) {
+          let identifier = "";
+          try { identifier = decodeURIComponent(match[1]); } catch {}
+          if (/^[A-Za-z0-9._-]{2,200}$/.test(identifier)) return "https://archive.org/embed/" + encodeURIComponent(identifier);
+        }
+      }
       if (provider === "youtube") {
         let id = "";
         if (parsed.hostname === "youtu.be") id = parsed.pathname.split("/").filter(Boolean)[0] || "";
