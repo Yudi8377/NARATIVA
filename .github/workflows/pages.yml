@@ -57,6 +57,8 @@ jobs:
           test -s docs/ADMIN-CONSOLE-SECURITY.md
           grep -q 'admin-console.js' website/admin.html
           test -s website/connector-manager.html
+          grep -q 'noindex,nofollow' website/connector-manager.html
+          grep -q 'commerce.html#vendors' website/connector-manager.html
           test -s website/connector-manager.js
           test -s website/experience.css
           test -s website/vendor/supabase.js
@@ -90,14 +92,10 @@ jobs:
           grep -q 'id="masteryCheck"' website/learning.html
           grep -q 'function contextualPlan' website/learning.js
           grep -q 'learningSourceLinks' website/learning.js
-          grep -q 'connector-manager.js' website/connector-manager.html
-          grep -q 'experience.css' website/connector-manager.html
-          grep -q 'vendorResults' website/connector-manager.html
           test "$(grep -o "name:'" website/connector-manager.js | wc -l)" -eq 31
           grep -q 'Lihat kebutuhan dan langkah konfigurasi' website/connector-manager.js
           grep -q 'noopener noreferrer' website/connector-manager.js
           grep -q 'woocommerce-connect' website/connector-manager.js
-          grep -q 'wooConnectForm' website/connector-manager.html
           test -s supabase/functions/woocommerce-connect/index.ts
           test -s supabase/migrations/202610110002_narativa_connector_connections.sql
       - name: Upload website artifact
