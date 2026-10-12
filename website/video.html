@@ -28,6 +28,22 @@
 <section class="video-content wrap" id="watch">
 <div class="video-section-heading"><div><div class="eyebrow">YOUR NEXT FAVORITE</div><h2>Ruang <em>menonton</em></h2></div><p>Telusuri karya dan media terbuka. Pilih kartu untuk memutar video atau membuka halaman sumber aslinya.</p></div>
 <div class="video-toolbar"><label class="video-search"><span>⌕</span><input id="videoSearch" type="search" placeholder="Cari judul, genre, kreator, atau sumber..." aria-label="Cari video"></label><div class="video-filters" role="group" aria-label="Filter video"><button class="filter-chip active" data-filter="all">Semua</button><button class="filter-chip" data-filter="creator">Karya kreator</button><button class="filter-chip" data-filter="open">Open cinema</button><button class="filter-chip" data-filter="documentary">Dokumenter</button><button class="filter-chip" data-filter="external">Platform eksternal</button></div></div>
+<section class="platform-picker" aria-labelledby="platformPickerTitle">
+  <div class="platform-picker-heading"><div><span class="eyebrow">ONE HUB · MANY PLATFORMS</span><h3 id="platformPickerTitle">Pilih <em>platform tontonan</em></h3><p>Pilih tempat Anda ingin mencari atau menonton. Jika platform mendukung embed, video bisa tampil di sini; jika tidak, NARATIVA membuka sumber aslinya.</p></div><span class="platform-picker-note">Akun tetap milik Anda</span></div>
+  <div class="platform-grid" role="group" aria-label="Pilih platform video">
+    <button class="platform-choice" type="button" data-platform="archive"><span class="platform-icon archive-icon">IA</span><span class="platform-choice-text"><strong>Internet Archive</strong><small>Arsip film & video</small></span><span class="platform-choice-arrow">↗</span></button>
+    <button class="platform-choice" type="button" data-platform="youtube"><span class="platform-icon youtube-icon">▶</span><span class="platform-choice-text"><strong>YouTube</strong><small>Video & kanal kreator</small></span><span class="platform-choice-arrow">↗</span></button>
+    <button class="platform-choice" type="button" data-platform="tiktok"><span class="platform-icon tiktok-icon">♪</span><span class="platform-choice-text"><strong>TikTok</strong><small>Video pendek</small></span><span class="platform-choice-arrow">↗</span></button>
+    <button class="platform-choice" type="button" data-platform="melolo"><span class="platform-icon melolo-icon">M</span><span class="platform-choice-text"><strong>Melolo</strong><small>Drama pendek</small></span><span class="platform-choice-arrow">↗</span></button>
+    <button class="platform-choice" type="button" data-platform="other"><span class="platform-icon other-icon">＋</span><span class="platform-choice-text"><strong>Sumber lain</strong><small>Masukkan tautan sendiri</small></span><span class="platform-choice-arrow">↓</span></button>
+  </div>
+  <form id="platformSearchForm" class="platform-search-form">
+    <label id="platformSearchLabel" for="platformSearchQuery">Cari di Internet Archive</label>
+    <div class="platform-search-row"><input id="platformSearchQuery" type="search" maxlength="180" placeholder="Masukkan judul film atau topik..."><button class="button primary" type="submit">Cari tontonan ↗</button></div>
+    <p id="platformSearchHelp" class="platform-search-help">Hasil pencarian dibuka pada platform resmi. Video Internet Archive hanya bisa disematkan bila URL item dan berkasnya mendukung pemutaran.</p>
+    <p id="platformSearchFeedback" class="platform-search-feedback" role="status" aria-live="polite"></p>
+  </form>
+</section>
 <div class="watch-source-panel">
   <div class="watch-source-copy"><span class="eyebrow">UNIVERSAL WATCH</span><h3>Tambahkan <em>sumber tontonan</em></h3><p>Tempel tautan video dari YouTube, TikTok, Melolo, atau situs lain. NARATIVA akan mengenali sumbernya, menyematkan pemutar resmi bila didukung, atau membuka situs aslinya.</p></div>
   <form id="watchSourceForm" class="watch-source-form">
