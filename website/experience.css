@@ -245,3 +245,14 @@ body.x-reader-open{overflow:hidden}
 .x-mentor-tutorial summary{cursor:pointer;color:var(--x-ink)}
 .x-mentor-tutorial li{margin:6px 0}
 @media(max-width:900px){.x-photo-workbench{grid-template-columns:1fr}.x-photo-stage{min-height:240px}.x-menubar-current{width:100%;margin-left:0;padding:5px 8px}.x-studio-menubar{border-radius:12px}}
+
+/* Admin Console sign-in: explicit, accessible controls */
+.x-admin-login{display:grid;gap:8px;max-width:420px;margin:20px 0}
+.x-admin-login label{font-size:12px;letter-spacing:.04em;color:var(--x-muted);margin-top:6px}
+.x-admin-login input{box-sizing:border-box;width:100%;min-height:44px;padding:11px 13px;border:1px solid var(--x-line);border-radius:8px;background:var(--x-panel,#111923);color:var(--x-ink);font:inherit}
+.x-admin-login input:focus-visible,.x-admin-login button:focus-visible{outline:2px solid var(--x-gold);outline-offset:3px}
+.x-admin-login button{justify-self:start;margin-top:8px}
+.x-admin-login [hidden]{display:none!important}
+.x-admin-gate [role=status]{max-width:620px;margin:12px 0;color:var(--x-muted);line-height:1.6}
+.x-admin-gate [role=status][data-kind=error]{color:#ff9d9d}
+.x-admin-gate [role=status][data-kind=success]{color:#9de0c9}
