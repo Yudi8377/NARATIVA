@@ -24,6 +24,7 @@
   const externalStorageKey = "narativa.video.external-sources";
   const providerFor = (url) => {
     const host = new URL(url).hostname.toLowerCase().replace(/^www\./,"");
+    if (host === "archive.org" || host.endsWith(".archive.org")) return "archive";
     if (host === "youtu.be" || host === "youtube.com" || host.endsWith(".youtube.com") || host === "youtube-nocookie.com") return "youtube";
     if (host === "tiktok.com" || host.endsWith(".tiktok.com")) return "tiktok";
     if (host === "melolo.com" || host.endsWith(".melolo.com") || host.endsWith(".melolo.net") || host.endsWith(".melolo.app")) return "melolo";
@@ -50,6 +51,7 @@
   const titleFromUrl = (url) => {
     const host = hostLabel(url);
     const provider = providerFor(url);
+    if (provider === "archive") return "Video Internet Archive";
     if (provider === "youtube") return "Video YouTube";
     if (provider === "tiktok") return "Video TikTok";
     if (provider === "melolo") return "Tontonan Melolo";
@@ -123,6 +125,59 @@
     $("resultsTitle").textContent = titles[activeFilter] || titles.all;
     render();
   }));
+  const platformConfig = {
+    archive:{name:"Internet Archive",url:"https://archive.org/details/movies",search:(q)=>"https://archive.org/search?query="+encodeURIComponent(q)+"&mediatype=movies",label:"Cari di Internet Archive",placeholder:"Masukkan judul film atau topik...",help:"Cari film dan video pada katalog Internet Archive. Hak dan lisensi berbeda untuk setiap item."},
+    youtube:{name:"YouTube",url:"https://www.youtube.com/",search:(q)=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q),label:"Cari di YouTube",placeholder:"Cari video atau kanal kreator...",help:"Tautan dibuka di YouTube. Jika browser sudah masuk ke akun, YouTube dapat menggunakan sesi yang tersedia di browser itu."},
+    tiktok:{name:"TikTok",url:"https://www.tiktok.com/",search:(q)=>"https://www.tiktok.com/search?q="+encodeURIComponent(q),label:"Cari di TikTok",placeholder:"Cari kreator atau video pendek...",help:"Tautan dibuka di TikTok. Login, konten, dan fitur akun dikendalikan oleh TikTok."},
+    melolo:{name:"Melolo",url:"https://www.melolo.com/",search:(q)=>"https://www.melolo.com/search?keyword="+encodeURIComponent(q),label:"Cari di Melolo",placeholder:"Cari judul drama...",help:"Struktur pencarian Melolo dapat berubah. Jika pencarian tidak tersedia, buka halaman resmi dan cari di sana."},
+    other:{name:"Sumber lain",url:"",search:null,label:"Cari atau tambahkan sumber lain",placeholder:"Tempel URL di panel Tambahkan sumber tontonan...",help:"Gunakan formulir Universal Watch di bawah untuk menambahkan tautan lain."}
+  };
+  let selectedPlatform = "archive";
+  const platformQuery = $("platformSearchQuery");
+  function selectPlatform(platform) {
+    selectedPlatform = platformConfig[platform] ? platform : "archive";
+    const config = platformConfig[selectedPlatform];
+    document.querySelectorAll("[data-platform]").forEach(button => {
+      const selected = button.dataset.platform === selectedPlatform;
+      button.classList.toggle("selected", selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
+    $("platformSearchLabel").textContent = config.label;
+    platformQuery.placeholder = config.placeholder;
+    $("platformSearchHelp").textContent = config.help;
+    $("platformSearchFeedback").textContent = "";
+  }
+  document.querySelectorAll("[data-platform]").forEach(button => button.addEventListener("click", () => {
+    selectPlatform(button.dataset.platform);
+    if (selectedPlatform === "other") {
+      $("watchSourceUrl")?.focus();
+      $("watchSourceForm")?.scrollIntoView({behavior:"smooth",block:"center"});
+    } else {
+      platformQuery?.focus();
+    }
+  }));
+  $("platformSearchForm")?.addEventListener("submit", event => {
+    event.preventDefault();
+    const config = platformConfig[selectedPlatform];
+    const query = (platformQuery.value || "").trim();
+    if (selectedPlatform === "other") {
+      $("platformSearchFeedback").textContent = "Tempel URL pada formulir Universal Watch di bawah.";
+      $("watchSourceUrl")?.focus();
+      return;
+    }
+    const target = query && config.search ? config.search(query) : config.url;
+    if (!target || !isHttpUrl(target)) {
+      $("platformSearchFeedback").textContent = "Pencarian belum tersedia untuk platform ini. Buka situs resminya.";
+      return;
+    }
+    const opened = window.open(target, "_blank", "noopener,noreferrer");
+    if (!opened) {
+      $("platformSearchFeedback").textContent = "Pop-up diblokir. Gunakan tautan resmi: " + config.url;
+      return;
+    }
+    $("platformSearchFeedback").textContent = "Membuka " + config.name + ". Jika Anda sudah login pada browser ini, platform mungkin menggunakan sesi akun Anda.";
+  });
+  selectPlatform("archive");
   searchInput?.addEventListener("input", render);
   grid?.addEventListener("click", event => {
     const button = event.target.closest("[data-play]");
@@ -141,8 +196,8 @@
     const item = {
       id:"external-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,7),
       title:suppliedTitle || titleFromUrl(rawUrl), creator:hostLabel(rawUrl), provider,
-      providerLabel:provider === "youtube" ? "YouTube" : provider === "tiktok" ? "TikTok" : provider === "melolo" ? "Melolo" : "Situs eksternal",
-      description:provider === "youtube" || provider === "tiktok" ? "Video eksternal. Jika tautan mendukung pemutar resmi, video dapat disematkan; jika tidak, buka sumber asli." : "Tautan menuju sumber asli. Pemutaran tetap mengikuti dukungan, aturan, dan ketersediaan platform sumber.",
+      providerLabel:provider === "archive" ? "Internet Archive" : provider === "youtube" ? "YouTube" : provider === "tiktok" ? "TikTok" : provider === "melolo" ? "Melolo" : "Situs eksternal",
+      description:provider === "archive" ? "Item dari Internet Archive. Pemutar resmi dapat digunakan untuk item yang mendukung embed; periksa hak dan lisensi item sebelum penggunaan ulang." : provider === "youtube" || provider === "tiktok" ? "Video eksternal. Jika tautan mendukung pemutar resmi, video dapat disematkan; jika tidak, buka sumber asli." : "Tautan menuju sumber asli. Pemutaran tetap mengikuti dukungan, aturan, dan ketersediaan platform sumber.",
       url:parsed.href, addedAt:new Date().toISOString()
     };
     try {
