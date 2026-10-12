@@ -40,11 +40,11 @@ jobs:
           node scripts/production-contracts.test.mjs
       - name: Agent — SEO, security, performance, accessibility, functional audit
         run: node scripts/narativa-agents-audit.mjs
-      - name: Preserve private audit report
+      - name: Store audit report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: narativa-quality-report-\${{ github.run_number }}
+          name: narativa-quality-report-${{ github.run_number }}
           path: artifacts/narativa-quality-report.*
           if-no-files-found: warn
           retention-days: 30
