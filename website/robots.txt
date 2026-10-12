@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /admin.html
+Disallow: /connector-manager.html
+Disallow: /admin-console.js
 
 Sitemap: https://yudi8377.github.io/NARATIVA/sitemap.xml
