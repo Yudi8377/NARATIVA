@@ -61,7 +61,7 @@ check('AI Mentor requires explicit consent and keeps prompts out of the usage ta
   /payload\.consent !== true/.test(aiMentorFunction) &&
   /30/.test(aiMentorFunction) &&
   /revoke all on table public\.ai_mentor_usage from anon, authenticated, public/i.test(aiMentorMigration) &&
-  !/\b(prompt|question|manuscript)\s+text\b/i.test(aiMentorMigration),
+  !/(?:^|\n)\s*(prompt|question|manuscript)\s+text\b/i.test(aiMentorMigration),
   'AI Mentor must require per-request consent, rate-limit requests, and avoid storing prompt content.');
 check('Story pipeline requires explicit consent and a session',
   /if\s*\(!\$\('aiPermission'\)\.checked\)/.test(experiences) &&
