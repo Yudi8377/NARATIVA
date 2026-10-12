@@ -62,7 +62,7 @@ try {
       language_code: 'id',
       content_type: 'storybook',
       status: 'draft',
-      rights_metadata: { license: 'E2E temporary test only' },
+      rights_metadata: { owner_name: 'NARATIVA E2E Test', license: 'E2E temporary test only', provenance: 'e2e-test' },
       metadata: { e2e_test: true, temporary: true },
     },
   });
@@ -90,13 +90,12 @@ try {
   const draftPublic = await request('/rest/v1/books?select=id,status&slug=eq.' + encodeURIComponent(slug));
   assert(Array.isArray(draftPublic) && draftPublic.length === 0, 'anonymous reader cannot see a draft');
 
-  const published = await request('/rest/v1/books?id=eq.' + encodeURIComponent(bookId) + '&owner_id=eq.' + encodeURIComponent(userId), {
-    method: 'PATCH',
+  const published = await request('/functions/v1/publish-work', {
+    method: 'POST',
     token,
-    prefer: 'return=representation',
-    body: { status: 'published', updated_at: new Date().toISOString() },
+    body: { book_id: bookId, rights_confirmed: true },
   });
-  assert(Array.isArray(published) && published.some(row => row.status === 'published'), 'creator can publish the work');
+  assert(published?.ok === true && published.status === 'published', 'creator can publish through the guarded server endpoint');
 
   const publicBooks = await request('/rest/v1/books?select=id,title,status,description,content_type,language_code,slug&id=eq.' + encodeURIComponent(bookId));
   assert(Array.isArray(publicBooks) && publicBooks.length === 1 && publicBooks[0].status === 'published', 'anonymous reader can load the published work');
@@ -129,12 +128,18 @@ try {
 
   console.log('PASS creator → save → publish → anonymous read → Commerce catalog flow.');
 } finally {
+  const cleanupErrors = [];
   if (productId && token && userId) {
-    await request('/rest/v1/commerce_products?id=eq.' + encodeURIComponent(productId) + '&seller_id=eq.' + encodeURIComponent(userId), { method: 'DELETE', token, prefer: 'return=minimal' });
-    console.log('CLEANUP temporary commerce product removed');
+    try {
+      await request('/rest/v1/commerce_products?id=eq.' + encodeURIComponent(productId) + '&seller_id=eq.' + encodeURIComponent(userId), { method: 'DELETE', token, prefer: 'return=minimal' });
+      console.log('CLEANUP temporary commerce product removed');
+    } catch (error) { cleanupErrors.push('product cleanup: ' + error.message); }
   }
   if (bookId && token && userId) {
-    await request('/rest/v1/books?id=eq.' + encodeURIComponent(bookId) + '&owner_id=eq.' + encodeURIComponent(userId), { method: 'DELETE', token, prefer: 'return=minimal' });
-    console.log('CLEANUP temporary E2E work removed');
+    try {
+      await request('/rest/v1/books?id=eq.' + encodeURIComponent(bookId) + '&owner_id=eq.' + encodeURIComponent(userId), { method: 'DELETE', token, prefer: 'return=minimal' });
+      console.log('CLEANUP temporary E2E work removed');
+    } catch (error) { cleanupErrors.push('work cleanup: ' + error.message); }
   }
+  if (cleanupErrors.length) throw new Error('E2E cleanup requires manual review: ' + cleanupErrors.join('; '));
 }
