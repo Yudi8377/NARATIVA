@@ -39,8 +39,8 @@ jobs:
           grep -q 'narativa.video.external-sources' website/video.js
           test -s website/admin-console.js
           test -s supabase/functions/admin-console/index.ts
-          test -s supabase/migrations/202610120001_narativa_secure_admin_console.sql
-          test -s supabase/migrations/202610120002_narativa_commerce_catalog_ledger.sql
+          test -s supabase/migrations/20261012015258_narativa_secure_admin_console.sql
+          test -s supabase/migrations/20261012015602_narativa_commerce_catalog_ledger.sql
           test -s docs/COMMERCE-CATALOG-LEDGER.md
           test -s docs/ADMIN-CONSOLE-SECURITY.md
           grep -q 'admin-console.js' website/admin.html

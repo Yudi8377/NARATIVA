@@ -7,8 +7,8 @@ const commerce = read('../website/commerce.html');
 const admin = read('../website/admin.html');
 const adminClient = read('../website/admin-console.js');
 const adminFunction = read('../supabase/functions/admin-console/index.ts');
-const adminMigration = read('../supabase/migrations/202610120001_narativa_secure_admin_console.sql');
-const commerceMigration = read('../supabase/migrations/202610120002_narativa_commerce_catalog_ledger.sql');
+const adminMigration = read('../supabase/migrations/20261012015258_narativa_secure_admin_console.sql');
+const commerceMigration = read('../supabase/migrations/20261012015602_narativa_commerce_catalog_ledger.sql');
 const experiences = read('../website/experiences.js');
 const failures = [];
 
