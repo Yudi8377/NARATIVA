@@ -734,8 +734,10 @@
       const slug = slugify(title) + '-' + signedInUser.id.slice(0,8);
       const metadata = { mode, format, visibility, rightsOwner:$('rightsOwner').value.trim(), license:$('rightsLicense').value, aiPermission:$('aiPermission').checked, savedAt:new Date().toISOString() };
       const rightsMetadata = { owner_name:metadata.rightsOwner, license:metadata.license, ai_processing_allowed:metadata.aiPermission, provenance:'creator-studio' };
-      const bookFields = { owner_id:signedInUser.id, slug, title, description:body.slice(0,1200), language_code:'id', content_type:contentType(format), status:status === 'published' ? 'draft' : status, rights_metadata:rightsMetadata, metadata };
       let book = cloudBooks.find(b => b.id === activeBookId) || cloudBooks.find(b => b.slug === slug);
+      if (status === 'published' && !metadata.rightsOwner) throw new Error('Isi nama pemegang hak cipta atau pihak yang berwenang menerbitkan.');
+      if (status === 'published' && metadata.license.toLowerCase() === 'perlu pemeriksaan hak') throw new Error('Selesaikan pemeriksaan hak distribusi sebelum menerbitkan.');
+      const bookFields = { owner_id:signedInUser.id, slug, title, description:body.slice(0,1200), language_code:'id', content_type:contentType(format), status:status === 'published' ? (book?.status === 'published' ? 'published' : 'draft') : status, rights_metadata:rightsMetadata, metadata };
       if (book) {
         const { data, error } = await db.from('books').update(bookFields).eq('id',book.id).select('id,slug,title,status').single();
         if (error) throw error;
@@ -753,8 +755,12 @@
       const { error: saveVersionError } = await db.from('book_versions').insert({ book_id:book.id, version_number:versionNumber, canonical_content:canonical, change_summary:status === 'published' ? 'Kreator menerbitkan karya' : 'Kreator menyimpan versi karya', created_by:signedInUser.id });
       if (saveVersionError) throw saveVersionError;
       if (status === 'published') {
-        const { error: publishError } = await db.from('books').update({ status:'published' }).eq('id',book.id).eq('owner_id',signedInUser.id);
-        if (publishError) throw publishError;
+        const { data: publishData, error: publishError } = await db.functions.invoke('publish-work', { body: { book_id:book.id, rights_confirmed:true } });
+        if (publishError || !publishData?.ok) {
+          let detail = publishData?.message || publishData?.error || publishError?.message || 'Publikasi ditolak server.';
+          try { if (publishError?.context?.json) { const responseBody = await publishError.context.json(); detail = responseBody.message || responseBody.error || detail; } } catch (_) {}
+          throw new Error(detail);
+        }
       }
       $('workVisibility').value = visibility;
       await refreshCloudProjects();
