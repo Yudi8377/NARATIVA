@@ -1077,6 +1077,7 @@
         if (!book) throw new Error('Pilih karya dari Creator Studio terlebih dahulu.');
         const status = $('productStatus').value;
         if (status === 'active' && book.status !== 'published') throw new Error('Terbitkan karya terlebih dahulu sebelum mengaktifkan produk katalog.');
+        if (status === 'active' && $('productRights').value === 'Perlu pemeriksaan hak') throw new Error('Selesaikan pemeriksaan hak distribusi sebelum mengaktifkan produk katalog.');
         const existing = commerceProducts.find(item => item.book_id === book.id);
         const payload = {
           book_id:book.id,
