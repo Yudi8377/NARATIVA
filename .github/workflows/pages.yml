@@ -39,6 +39,9 @@ jobs:
           grep -q 'narativa.video.external-sources' website/video.js
           test -s website/admin-console.js
           test -s supabase/functions/admin-console/index.ts
+          test -s supabase/functions/ai-mentor/index.ts
+          test -s supabase/migrations/20261012015700_narativa_ai_mentor_usage.sql
+          test -s docs/AI-MENTOR-PROVIDER.md
           test -s supabase/migrations/20261012015258_narativa_secure_admin_console.sql
           test -s supabase/migrations/20261012015602_narativa_commerce_catalog_ledger.sql
           test -s docs/COMMERCE-CATALOG-LEDGER.md
