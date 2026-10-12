@@ -50,6 +50,6 @@ writeFileSync('artifacts/narativa-live-health.md', [
   '',
   '| Page | HTTP | Response | Status |',
   '|---|---:|---:|---|',
-  ...results.map(r => '| ' + r.url + ' | ' + r.status + ' | ' + r.elapsedMs + ' ms | ' + (r.ok ? 'PASS' : 'FAIL ' + r.reason) + ' |')
+  ...results.map(r => '| ' + r.url + ' | ' + r.status + ' | ' + r.elapsedMs + ' ms | ' + (r.ok ? (r.slow ? 'SLOW' : 'PASS') : 'FAIL ' + r.reason) + ' |')
 ].join('\n') + '\n');
 if (report.healthy !== report.total) process.exitCode = 1;
