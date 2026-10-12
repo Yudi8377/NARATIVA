@@ -1,0 +1,33 @@
+name: NARATIVA Live Health Monitor
+
+on:
+  schedule:
+    - cron: "37 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: narativa-live-health
+  cancel-in-progress: true
+
+jobs:
+  live-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Probe public journeys with retries and latency measurements
+        run: node scripts/live-healthcheck.mjs
+      - name: Store health report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: narativa-live-health-\${{ github.run_number }}
+          path: artifacts/narativa-live-health.*
+          if-no-files-found: warn
+          retention-days: 30
