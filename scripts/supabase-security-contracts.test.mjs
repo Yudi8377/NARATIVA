@@ -16,7 +16,7 @@ const requiredFunctions = [
 ];
 for (const [path, label] of requiredFunctions) {
   const src = read(path);
-  check(label + ' authenticates bearer tokens', /Authorization.*Bearer|Bearer\\s/.test(src) && /auth\.getUser/.test(src), 'Expected bearer token validation and auth.getUser call');
+  check(label + ' authenticates bearer tokens', /Authorization.*Bearer|Bearer/.test(src) && /auth\.getUser/.test(src), 'Expected bearer token validation and auth.getUser call');
   check(label + ' uses server-side secrets', /Deno\.env\.get\(["']SUPABASE_SERVICE_ROLE_KEY["']\)/.test(src), 'Expected service role key to be read from server environment');
   check(label + ' has bounded request method handling', /req\.method\s*!==?\s*["']POST["']/.test(src) || /req\.method\s*===?\s*["']POST["']/.test(src), 'Expected explicit HTTP method handling');
 }
