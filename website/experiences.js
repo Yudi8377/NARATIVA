@@ -369,15 +369,24 @@
       $('studioGoal').placeholder = spec.goal;
       $('studioStyle').value = spec.style;
       $('studioBriefFoot').textContent = spec.foot;
-      if (!editor.value.trim() || editor.dataset.lastStudioSample === 'true') {
+      const dedicated = ['comic','video','3d','audio','learning'].includes(mode);
+      $('dedicatedWorkspace').hidden = !dedicated;
+      document.querySelectorAll('.x-generic-only').forEach(el => { el.hidden = dedicated; });
+      document.querySelectorAll('[data-special-form]').forEach(el => { el.hidden = el.dataset.specialForm !== mode; });
+      document.querySelectorAll('[data-build-workspace]').forEach(el => { el.hidden = el.dataset.buildWorkspace !== mode; });
+      $('openStoryWizard').hidden = dedicated;
+      $('makeOutline').hidden = dedicated;
+      $('makeOutline').textContent = mode === 'writing' ? 'Susun storyboard' : mode === 'comic' ? 'Susun storyboard panel' : mode === 'video' ? 'Susun shot list' : mode === '3d' ? 'Spesifikasi 3D' : mode === 'audio' ? 'Cue sheet audio' : 'Alur buku hidup';
+      $('saveDraft').textContent = dedicated ? 'Simpan proyek & hasil' : 'Simpan ke cloud';
+      $('publishWork').textContent = dedicated ? 'Pratinjau / ajukan terbit' : 'Pratinjau & terbitkan';
+      document.querySelector('.x-format-block').hidden = dedicated;
+      $('dedicatedOutput').hidden = true;
+      if (!dedicated && (!editor.value.trim() || editor.dataset.lastStudioSample === 'true')) {
         editor.value = spec.sample;
         editor.dataset.lastStudioSample = 'true';
         updateEditorCount();
-      } else {
-        editor.dataset.lastStudioSample = 'false';
       }
-      $('makeOutline').textContent = mode === 'video' ? 'Buat breakdown adegan' : mode === 'comic' ? 'Susun storyboard panel' : mode === '3d' ? 'Susun spesifikasi produksi' : mode === 'audio' ? 'Susun cue produksi' : mode === 'learning' ? 'Susun alur interaksi' : 'Susun storyboard';
-      setNotice('Modul ' + spec.eyebrow + ' aktif. Isi brief khusus, periksa hasil, lalu simpan draft. Keluaran eksternal memerlukan konektor sesuai modul.', 'info');
+      setNotice(dedicated ? 'Workspace khusus ' + spec.eyebrow + ' aktif. Isi parameter, buat hasil kerja, lalu simpan proyek.' : 'Modul ' + spec.eyebrow + ' aktif. Editor naskah dan Wizard tersedia untuk mode ini.', 'info');
     }
     document.querySelectorAll('[data-studio]').forEach(btn => btn.addEventListener('click', () => { setMode(btn.dataset.studio); $('create').scrollIntoView({behavior:'smooth',block:'start'}); }));
     document.querySelectorAll('[data-launch-studio]').forEach(btn => btn.addEventListener('click', () => { setMode(btn.dataset.launchStudio); $('create').scrollIntoView({behavior:'smooth',block:'start'}); }));
@@ -715,6 +724,59 @@
     $('workText').addEventListener('input', () => { lastStoryboard = null; });
     $('workTitle').addEventListener('input', () => { lastStoryboard = null; });
     $('workFormat').addEventListener('change', () => { lastStoryboard = null; });
+    const workspaceCopy = (id) => ($(id)?.value || '').trim();
+    function renderWorkspaceResult(title, sections, note) {
+      const output=$('dedicatedOutputBody'); output.replaceChildren();
+      sections.forEach((section,index)=>{
+        const article=document.createElement('article'); article.className='x-production-card';
+        const num=document.createElement('span'); num.className='x-production-number'; num.textContent=String(index+1).padStart(2,'0');
+        const body=document.createElement('div'); const h=document.createElement('h4'); h.textContent=section.title;
+        const p=document.createElement('p'); p.textContent=section.body || 'Belum diisi — lengkapi bagian ini sebelum produksi.';
+        body.append(h,p); if(section.meta){const small=document.createElement('small');small.textContent=section.meta;body.append(small);}
+        article.append(num,body); output.appendChild(article);
+      });
+      $('dedicatedOutputTitle').textContent=title; $('dedicatedOutputNote').textContent=note; $('dedicatedOutput').hidden=false;
+      const markdown='# '+($('workTitle').value.trim()||title)+'\n\n'+sections.map((s,i)=>'## '+String(i+1).padStart(2,'0')+' — '+s.title+'\n\n'+(s.body||'')+(s.meta?'\n\nCatatan: '+s.meta:'')).join('\n\n');
+      editor.value=markdown; editor.dataset.lastStudioSample='false'; updateEditorCount(); lastStoryboard=null;
+      setNotice('Hasil workspace tersusun. Periksa panel hasil lalu pilih “Simpan proyek & hasil” untuk menyimpan.', 'success');
+    }
+    document.querySelectorAll('[data-build-workspace]').forEach(button=>button.addEventListener('click',()=>{
+      const kind=button.dataset.buildWorkspace; const sections=[];
+      if(kind==='3d'){
+        const fields=[['TIPE ASET',workspaceCopy('modelKind')],['SKALA & FORMAT',workspaceCopy('modelScale')+' · '+workspaceCopy('modelExport')],['GEOMETRI / BENTUK',workspaceCopy('modelGeometry')],['MATERIAL & TEKSTUR',workspaceCopy('modelMaterial')],['RIG / ANIMASI',workspaceCopy('modelRig')],['PENCAHAYAAN / SCENE',workspaceCopy('modelLighting')],['LEVEL DETAIL',workspaceCopy('modelDetail')],['CATATAN TEKNIS',workspaceCopy('modelNotes')]];
+        fields.forEach(([title,body])=>sections.push({title,body,meta:title==='SKALA & FORMAT'?'Target ekspor yang dipilih; konversi belum dilakukan.':title==='GEOMETRI / BENTUK'?'Spesifikasi teks, bukan mesh 3D aktual.':''}));
+        renderWorkspaceResult('Spesifikasi aset 3D',sections,'Status: brief produksi. Mesh, UV, rig, tekstur, dan render tidak dibuat otomatis. Untuk preview, impor GLB/GLTF di Asset Inbox.');
+      } else if(kind==='video'){
+        const premise=workspaceCopy('videoPremise'); const duration=Number(workspaceCopy('videoDuration')||60); const count=Math.max(3,Math.min(12,Math.ceil(duration/7.5)));
+        const beats=Array.from({length:count},(_,i)=>{const start=Math.round(i*duration/count),end=Math.round((i+1)*duration/count);return {title:'SHOT '+String(i+1).padStart(2,'0')+' · '+start+'–'+end+' dtk',body:i===0?'PEMBUKAAN: '+premise:i===count-1?'PENUTUP / PAYOFF: '+premise:'AKSI / PERUBAHAN: '+premise,meta:workspaceCopy('videoDirection')+' · '+workspaceCopy('videoLook')+' · '+workspaceCopy('videoRatio')};});
+        sections.push({title:'MASTER BRIEF',body:premise,meta:duration+' detik · '+workspaceCopy('videoRatio')+' · '+workspaceCopy('videoLanguage')+' · '+workspaceCopy('videoLook')},...beats);
+        renderWorkspaceResult('Timeline & shot list',sections,'Status: perencanaan produksi. Ini bukan file video hasil render; provider video AI perlu dihubungkan untuk menghasilkan klip.');
+      } else if(kind==='comic'){
+        const pages=Math.max(1,Math.min(100,Number(workspaceCopy('comicPages')||1))),panels=Math.max(1,Math.min(12,Number(workspaceCopy('comicPanels')||6)));
+        const dialogue=workspaceCopy('comicDialogue').split(/(?<=[.!?])\s+|\n+/).filter(Boolean);
+        sections.push({title:'ART DIRECTION',body:workspaceCopy('comicScene'),meta:workspaceCopy('comicStyle')+' · '+pages+' halaman'});
+        for(let p=1;p<=pages;p++)for(let n=1;n<=panels;n++){const index=(p-1)*panels+n;sections.push({title:'HALAMAN '+p+' · PANEL '+n,body:dialogue[(index-1)%Math.max(1,dialogue.length)]||'Tentukan aksi, ekspresi, latar, dan sudut pandang untuk panel ini.',meta:'Komposisi panel · balon dialog · SFX · kontinuitas visual'});}
+        renderWorkspaceResult('Layout panel komik',sections,'Status: storyboard tekstual. Ilustrasi panel final memerlukan generator gambar atau aset gambar yang diunggah.');
+      } else if(kind==='audio'){
+        const cues=workspaceCopy('audioCues').split(/\n+/).filter(Boolean);
+        sections.push({title:'KONSEP & FORMAT',body:workspaceCopy('audioConcept'),meta:workspaceCopy('audioType')+' · '+workspaceCopy('audioDuration')+' · '+workspaceCopy('audioVoice')});
+        cues.forEach((cue,i)=>sections.push({title:'CUE '+String(i+1).padStart(2,'0'),body:cue,meta:'Tentukan timing, level, fade, dan posisi stereo.'}));
+        if(!cues.length) sections.push({title:'CUE AWAL',body:'Tambahkan dialog, SFX, musik, dan jeda untuk setiap adegan.',meta:'Belum ada cue yang ditulis.'});
+        renderWorkspaceResult('Cue sheet audio',sections,'Status: dokumen produksi audio. File suara belum disintesis; memerlukan provider TTS/audio.');
+      } else {
+        sections.push({title:'TUJUAN BELAJAR',body:workspaceCopy('eduGoal'),meta:workspaceCopy('eduAge')}, {title:'PEMICU & HALAMAN',body:workspaceCopy('eduTrigger')+' — '+workspaceCopy('eduObject'),meta:'Tentukan gambar/marker yang memulai pengalaman.'},{title:'NARASI & INTERAKSI',body:workspaceCopy('eduAudio'),meta:'Rancang alternatif tanpa audio untuk aksesibilitas.'},{title:'UJI PEMAHAMAN',body:'Siswa mengamati, berinteraksi, lalu menjawab satu pertanyaan atau memilih objek yang benar.',meta:'Tambahkan rubrik dan cara mengulang materi.'});
+        renderWorkspaceResult('Alur buku hidup / AR',sections,'Status: rancangan interaksi edukasi. AR kamera langsung memerlukan runtime AR dan aset 3D yang sesuai.');
+      }
+    }));
+    $('applyDedicatedOutput').addEventListener('click',()=>{ $('dedicatedOutput').scrollIntoView({behavior:'smooth',block:'nearest'}); setNotice('Hasil sudah dimasukkan ke isi proyek. Simpan proyek untuk merekam versi ini.', 'success'); });
+    $('assetUpload').addEventListener('change',()=>{
+      const file=Array.from($('assetUpload').files||[]).find(item=>/\\.(glb|gltf)$/i.test(item.name));
+      if(!file) return;
+      const stage=$('modelPreviewStage'); stage.replaceChildren();
+      const viewer=document.createElement('model-viewer'); viewer.setAttribute('src',URL.createObjectURL(file)); viewer.setAttribute('alt','Preview model 3D '+file.name); viewer.setAttribute('camera-controls',''); viewer.setAttribute('auto-rotate',''); viewer.setAttribute('ar',''); viewer.style.cssText='width:100%;height:360px;background:#10151d';
+      stage.appendChild(viewer);
+      const info=document.createElement('small'); info.textContent=file.name+' · preview lokal, belum diunggah'; stage.appendChild(info);
+    });
     $('makeOutline').addEventListener('click', outline);
     $('newComic').addEventListener('click', () => { activeBookId = null; lastStoryboard = null; setMode('comic'); $('workTitle').value = 'Komik baru'; $('workText').value = ''; $('workFormat').value = 'comic'; $('create').scrollIntoView({behavior:'smooth'}); $('workText').focus(); });
     $('newWriting').addEventListener('click', () => { activeBookId = null; lastStoryboard = null; setMode('writing'); $('workTitle').value = 'Naskah baru'; $('workText').value = ''; $('workFormat').value = 'writing'; $('create').scrollIntoView({behavior:'smooth'}); $('workText').focus(); });
