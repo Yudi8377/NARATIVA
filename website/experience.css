@@ -213,3 +213,35 @@ body.x-reader-open{overflow:hidden}
 .x-production-card p{font-size:12px;line-height:1.7;white-space:pre-wrap;color:#e1e6eb;margin:0}
 .x-production-card small{display:block;color:var(--x-muted);font-size:10px;line-height:1.6;margin-top:6px}
 @media(max-width:680px){.x-dedicated-workspace{padding:14px}.x-dedicated-workspace-head{flex-direction:column}.x-form-row,.x-model-preview{grid-template-columns:1fr}.x-output-head{align-items:flex-start;flex-direction:column}}
+
+/* Creator Studio Suite: dedicated top menu, contextual mentor and photo workspace */
+.x-studio-menubar{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:9px 12px;background:#202833;border:1px solid var(--x-line);border-radius:14px 14px 0 0;margin-top:18px}
+.x-menubar-brand{font:10px 'DM Mono',monospace;letter-spacing:.12em;color:var(--x-gold);padding:0 12px 0 2px}
+.x-studio-menubar button{border:1px solid transparent;background:transparent;color:#d9e1e9;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:12px}
+.x-studio-menubar button:hover,.x-studio-menubar button:focus-visible{background:#ffffff10;border-color:#ffffff20}
+.x-menubar-current{margin-left:auto;color:var(--x-mint);font:10px 'DM Mono',monospace;letter-spacing:.08em}
+.x-menu-feedback{padding:10px 14px;border:1px solid var(--x-line);background:var(--x-panel);color:var(--x-muted);font-size:12px}
+.x-photo-workbench{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);gap:16px;margin:14px 0}
+.x-photo-stage{min-height:360px;position:relative;display:grid;place-items:center;overflow:hidden;background:repeating-conic-gradient(#222a35 0% 25%,#171e28 0% 50%) 50%/24px 24px;border:1px solid var(--x-line);border-radius:14px}
+.x-photo-stage canvas{display:block;width:100%;height:auto;max-height:640px;object-fit:contain}
+.x-photo-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;text-align:center;padding:24px;background:#10151dcc}
+.x-photo-empty[hidden]{display:none}
+.x-photo-empty>span{font-size:42px;color:var(--x-gold)}
+.x-photo-empty strong{font-size:16px}
+.x-photo-empty small{color:var(--x-muted);max-width:280px}
+.x-photo-empty label{cursor:pointer}
+.x-photo-controls{display:flex;flex-direction:column;gap:13px;min-width:0}
+.x-photo-upload{cursor:pointer}
+.x-photo-control-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.x-photo-control-grid label{font-size:12px;color:var(--x-muted)}
+.x-photo-control-grid output{float:right;color:var(--x-gold);font-family:'DM Mono',monospace}
+.x-photo-control-grid input[type=range]{display:block;width:100%;margin-top:8px;accent-color:var(--x-gold)}
+.x-photo-actions{display:flex;flex-wrap:wrap;gap:8px}
+.x-mentor-card h3{margin:0 0 8px;font-size:18px}
+.x-mentor-card>label{display:block;margin:12px 0 6px;font-size:12px;color:var(--x-muted)}
+.x-mentor-card>input{width:100%;margin-bottom:10px}
+.x-mentor-answer{margin-top:12px;padding:12px;border:1px solid #9de0c955;border-radius:10px;background:#9de0c90c;font-size:13px;line-height:1.65;white-space:normal}
+.x-mentor-tutorial{margin-top:14px;color:var(--x-muted);font-size:12px}
+.x-mentor-tutorial summary{cursor:pointer;color:var(--x-ink)}
+.x-mentor-tutorial li{margin:6px 0}
+@media(max-width:900px){.x-photo-workbench{grid-template-columns:1fr}.x-photo-stage{min-height:240px}.x-menubar-current{width:100%;margin-left:0;padding:5px 8px}.x-studio-menubar{border-radius:12px}}
