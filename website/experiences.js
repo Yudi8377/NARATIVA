@@ -343,18 +343,45 @@
       $('creatorNotice').dataset.kind = kind || 'info';
     }
     function updateCount() { $('projectCount').textContent = String(cloudBooks.length || draftList().length); }
+    const studioSpecs = {
+      writing: {format:'writing', eyebrow:'NOVEL & NASKAH', title:'Bangun cerita sampai siap disunting', description:'Susun premis, karakter, konflik, bab, lalu simpan naskah sebagai karya privat.', label:'Naskah / isi bab', placeholder:'Tulis premis, sinopsis, bab, dialog, atau narasi…', sample:'# Bab 1 — Pemantik\\n\\nPerkenalkan tokoh utama, keinginannya, dunia cerita, dan masalah yang mengganggu keseimbangan hidupnya.', goal:'Contoh: 8 bab, sudut pandang orang pertama', style:'Realistis dan natural', foot:'Alat tersedia: Wizard cerita, format teks, cari/ganti, riwayat edit, ekspor Markdown, cetak.'},
+      comic: {format:'comic', eyebrow:'KOMIK & WEBTOON', title:'Ubah cerita menjadi halaman dan panel', description:'Tulis beat per panel: komposisi, ekspresi, latar, dialog, SFX, dan transisi halaman.', label:'Skenario panel / dialog', placeholder:'HALAMAN 1\\nPanel 1 — establishing shot: ...\\nVisual: ...\\nDialog: ...\\nSFX: ...', sample:'HALAMAN 1\\nPanel 1 — Wide shot: kota saat hujan.\\nVisual: lampu toko memantul di jalan basah.\\nNarasi: “Hujan menyimpan rahasia yang tak pernah selesai.”\\nPanel 2 — Close-up: tangan membuka buku tanpa judul.\\nDialog: “Buku ini belum pernah ada kemarin.”', goal:'Contoh: 6 panel per halaman, gaya manga', style:'Stylized / ilustratif', foot:'Alat tersedia: outline/storyboard, skrip panel, aset gambar, metadata hak karya. Generasi gambar panel otomatis memerlukan provider gambar.'},
+      video: {format:'video', eyebrow:'AI VIDEO STUDIO', title:'Rancang video dari naskah hingga shot list', description:'Susun logline, rasio, durasi, gaya visual, shot, gerak kamera, dialog, musik, dan kebutuhan kontinuitas.', label:'Skenario / treatment video', placeholder:'JUDUL: ...\\nDURASI: 60 detik\\nRASIO: 16:9\\nSHOT 01 (0–5s): wide shot, lokasi, gerak kamera...\\nVISUAL: ...\\nDIALOG / VO: ...\\nAUDIO: ...\\nTRANSISI: ...', sample:'JUDUL: Perpustakaan di Ujung Hujan\\nDURASI: 60 detik · RASIO: 16:9\\nSHOT 01 (0–5s) — ESTABLISHING: kota malam, hujan di jalan, kamera dolly-in perlahan.\\nSHOT 02 (5–12s) — MEDIUM: penjaga perpustakaan menemukan buku tanpa judul.\\nSHOT 03 (12–20s) — INSERT: tinta bergerak sendiri di atas halaman.\\nVO: “Ada kenangan yang datang sebelum waktunya.”\\nAUDIO: hujan, ambience perpustakaan, piano minimal.\\nTRANSISI: match cut dari tinta ke langit gelap.', goal:'Contoh: 60 detik, 16:9, 8 shot', style:'Sinematik', foot:'Pipeline storyboard dapat memetakan adegan bila backend story-pipeline aktif dan Anda memberi izin pemrosesan. Render video AI final belum aktif tanpa konektor model video.'},
+      '3d': {format:'3d', eyebrow:'3D & WORLD BUILDER', title:'Spesifikasikan objek, karakter, atau dunia 3D', description:'Buat brief geometri, skala, topologi, material, rig, animasi, pencahayaan, kamera, dan format ekspor.', label:'Brief objek / scene 3D', placeholder:'OBJEK: ...\\nSKALA: ...\\nSILUET & GEOMETRI: ...\\nMATERIAL / TEKSTUR: ...\\nRIG / ANIMASI: ...\\nLINGKUNGAN & CAHAYA: ...\\nKAMERA: ...\\nEKSPOR: GLB / GLTF / OBJ / STL', sample:'OBJEK: penjaga perpustakaan bergaya semi-realistis\\nSKALA: tinggi 1,75 m\\nGEOMETRI: mantel panjang, buku tua di tangan kanan, proporsi natural\\nMATERIAL: kain matte, kulit, kertas usang, detail basah pada mantel\\nRIG: humanoid, idle breathing, menoleh ke buku\\nCAHAYA: key light hangat dari lampu meja, fill biru dari jendela hujan\\nKAMERA: 50 mm, medium shot, eye level\\nEKSPOR: GLB untuk web preview', goal:'Contoh: karakter 1,75 m, GLB, rig humanoid', style:'Realistis dan natural', foot:'Impor aset 3D tersedia melalui Asset Inbox. Generasi mesh, rigging, dan render 3D baru memerlukan engine/provider 3D; brief ini bukan file mesh otomatis.'},
+      audio: {format:'audio', eyebrow:'AUDIO DRAMA & NARASI', title:'Rancang narasi, dialog, dan lanskap suara', description:'Tentukan narator, karakter suara, emosi, tempo, ambience, efek, dan cue musik per adegan.', label:'Naskah narasi / audio drama', placeholder:'NARATOR (hangat, pelan): ...\\nTOKOH A (cemas): ...\\nSFX: hujan di jendela\\nMUSIK: piano minimal, fade in 3 detik\\nJEDA: 1,5 detik', sample:'NARATOR (hangat, intim; tempo 0,9x): “Di kota yang selalu diguyur hujan...”\\nSFX: hujan di kaca, halaman buku dibalik.\\nTOKOH — MARA (berbisik, penasaran): “Siapa yang menulis namaku?”\\nMUSIK: piano minimal masuk perlahan, berhenti pada kata terakhir.\\nMIX: dialog di depan, ambience -18 LUFS, musik turun saat dialog.', goal:'Contoh: narator perempuan, drama misteri, 3 menit', style:'Misterius dan emosional', foot:'Naskah dan cue audio dapat disiapkan. Sintesis suara, cloning suara, dan mixing otomatis memerlukan provider audio yang tersambung.'},
+      learning: {format:'other', eyebrow:'BUKU HIDUP & AR EDUKASI', title:'Ubah materi belajar menjadi pengalaman interaktif', description:'Rancang tujuan belajar, halaman pemicu, objek 3D, kalimat audio, interaksi, dan indikator pemahaman.', label:'Materi / skenario buku hidup', placeholder:'TUJUAN BELAJAR: ...\\nHALAMAN CETAK: ...\\nOBJEK PEMICU: ...\\nANIMASI: ...\\nAUDIO / KALIMAT: ...\\nINTERAKSI SISWA: ...\\nPENILAIAN: ...', sample:'TUJUAN BELAJAR: mengenal huruf A dan kosakata apple.\\nHALAMAN CETAK: huruf A besar, gambar anak, gambar apel.\\nOBJEK PEMICU: ilustrasi apel pada halaman.\\nANIMASI: apel muncul dari halaman, berputar perlahan, lalu kembali ke posisi.\\nAUDIO: suara ramah anak: “A untuk apple.”\\nINTERAKSI: siswa mengetuk apel untuk mengulang suara.\\nPENILAIAN: pilih gambar yang dimulai dengan bunyi A.', goal:'Contoh: kelas 1 SD, 1 halaman, 1 interaksi', style:'Untuk anak-anak', foot:'Modul menyiapkan desain pengalaman dan aset. Pelacakan marker kamera/AR real-time memerlukan runtime AR dan aset 3D yang belum dipasang.'}
+    };
     function setMode(next) {
-      mode = next;
+      mode = studioSpecs[next] ? next : 'writing';
+      const spec = studioSpecs[mode];
       document.querySelectorAll('[data-studio]').forEach(btn => {
         const selected = btn.dataset.studio === mode;
         btn.classList.toggle('is-selected', selected);
         btn.setAttribute('aria-selected', String(selected));
       });
-      $('workTextLabel').textContent = mode === 'comic' ? 'Premis / ringkasan panel' : 'Benih cerita / naskah';
-      $('workText').placeholder = mode === 'comic' ? 'Jelaskan panel, adegan, dialog, dan arah visual…' : 'Tulis ide, dialog, atau adegan…';
-      setNotice(mode === 'comic' ? 'Workspace komik siap. Simpan untuk menyimpan versi karya ke akun cloud.' : 'Workspace naskah siap. Simpan untuk menyimpan versi karya ke akun cloud.');
+      document.querySelectorAll('[data-launch-studio]').forEach(btn => btn.classList.toggle('is-active', btn.dataset.launchStudio === mode));
+      $('workFormat').value = spec.format;
+      $('workTextLabel').textContent = spec.label;
+      $('workText').placeholder = spec.placeholder;
+      $('studioBriefEyebrow').textContent = spec.eyebrow;
+      $('studioBriefTitle').textContent = spec.title;
+      $('studioBriefDescription').textContent = spec.description;
+      $('studioGoal').placeholder = spec.goal;
+      $('studioStyle').value = spec.style;
+      $('studioBriefFoot').textContent = spec.foot;
+      if (!editor.value.trim() || editor.dataset.lastStudioSample === 'true') {
+        editor.value = spec.sample;
+        editor.dataset.lastStudioSample = 'true';
+        updateEditorCount();
+      } else {
+        editor.dataset.lastStudioSample = 'false';
+      }
+      $('makeOutline').textContent = mode === 'video' ? 'Buat breakdown adegan' : mode === 'comic' ? 'Susun storyboard panel' : mode === '3d' ? 'Susun spesifikasi produksi' : mode === 'audio' ? 'Susun cue produksi' : mode === 'learning' ? 'Susun alur interaksi' : 'Susun storyboard';
+      setNotice('Modul ' + spec.eyebrow + ' aktif. Isi brief khusus, periksa hasil, lalu simpan draft. Keluaran eksternal memerlukan konektor sesuai modul.', 'info');
     }
-    document.querySelectorAll('[data-studio]').forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.studio)));
+    document.querySelectorAll('[data-studio]').forEach(btn => btn.addEventListener('click', () => { setMode(btn.dataset.studio); $('create').scrollIntoView({behavior:'smooth',block:'start'}); }));
+    document.querySelectorAll('[data-launch-studio]').forEach(btn => btn.addEventListener('click', () => { setMode(btn.dataset.launchStudio); $('create').scrollIntoView({behavior:'smooth',block:'start'}); }));
+
     // Creator editor: Markdown toolbar, local undo/redo, manuscript export and story wizard.
     const editor = $('workText');
     let editHistory = [editor.value];
