@@ -55,7 +55,7 @@ check('Commerce ledger is server-write-only with owner-scoped product access',
 check('Admin console remains fail-closed',
   /id="adminLoginForm"/.test(admin) &&
   /platform_admin/.test(admin) &&
-  /data\.ok/.test(adminClient) &&
+  /functions\.invoke\(['"]admin-console['"]/.test(adminClient) &&
   /platform_admin_roles/.test(adminFunction),
   'Admin UI must require a sign-in form and a server-confirmed platform_admin role before showing operational metrics.');
 check('Admin page loads the secure console client after Supabase SDK',
