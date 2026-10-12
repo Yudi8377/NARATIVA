@@ -7,6 +7,8 @@ const commerce = read('../website/commerce.html');
 const admin = read('../website/admin.html');
 const aiMentorFunction = read('../supabase/functions/ai-mentor/index.ts');
 const aiMentorMigration = read('../supabase/migrations/20261012020021_narativa_ai_mentor_usage.sql');
+const productionEngine = read('../supabase/functions/production-engine/index.ts');
+const productionMigration = read('../supabase/migrations/20261012020100_narativa_production_jobs.sql');
 const adminClient = read('../website/admin-console.js');
 const adminFunction = read('../supabase/functions/admin-console/index.ts');
 const adminMigration = read('../supabase/migrations/20261012015258_narativa_secure_admin_console.sql');
@@ -63,6 +65,15 @@ check('AI Mentor requires explicit consent and keeps prompts out of the usage ta
   /revoke all on table public\.ai_mentor_usage from anon, authenticated, public/i.test(aiMentorMigration) &&
   !/(?:^|\n)\s*(prompt|question|manuscript)\s+text\b/i.test(aiMentorMigration),
   'AI Mentor must require per-request consent, rate-limit requests, and avoid storing prompt content.');
+check('Production engine requires consent, owned project and private asset storage',
+  /id="engineConsent"/.test(creator) &&
+  /functions\.invoke\(['"]production-engine['"]/.test(experiences) &&
+  /body\.consent !== true/.test(productionEngine) &&
+  /eq\("owner_id", user\.id\)/.test(productionEngine) &&
+  /from\("book_assets"\)/.test(productionEngine) &&
+  /createSignedUrl\(path, 60\)/.test(productionEngine) &&
+  /revoke all on table public\.production_jobs from anon, authenticated, public/i.test(productionMigration),
+  'Image/speech jobs must require consent and ownership, store private assets, and keep job writes server-only.');
 check('Story pipeline requires explicit consent and a session',
   /if\s*\(!\$\('aiPermission'\)\.checked\)/.test(experiences) &&
   /if\s*\(!sessionData\.session\)/.test(experiences) &&

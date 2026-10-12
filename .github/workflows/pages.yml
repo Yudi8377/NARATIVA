@@ -40,6 +40,9 @@ jobs:
           test -s website/admin-console.js
           test -s supabase/functions/admin-console/index.ts
           test -s supabase/functions/ai-mentor/index.ts
+          test -s supabase/functions/production-engine/index.ts
+          test -s supabase/migrations/20261012020100_narativa_production_jobs.sql
+          test -s docs/PRODUCTION-ENGINES.md
           test -s supabase/migrations/20261012020021_narativa_ai_mentor_usage.sql
           test -s docs/AI-MENTOR-PROVIDER.md
           test -s supabase/migrations/20261012015258_narativa_secure_admin_console.sql
