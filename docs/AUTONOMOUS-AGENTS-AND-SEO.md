@@ -25,6 +25,16 @@ The GitHub Actions workflow \`.github/workflows/narativa-autonomous-agents.yml\`
 - Publish useful original work and creator pages only when the content is real, permissioned, and indexable.
 - Do not use keyword stuffing, doorway pages, fake reviews, fabricated authorship, or automated mass-generated thin pages.
 
+## Search engine onboarding (one-time owner action)
+
+1. Verify the canonical site property in Google Search Console and Bing Webmaster Tools using their supported verification flow.
+2. Submit `https://yudi8377.github.io/NARATIVA/sitemap.xml` from each dashboard.
+3. Inspect key public URLs and monitor indexing, mobile usability, and search queries.
+4. Keep verification tokens in the search platform or an approved secret store; never commit them to the repository.
+5. If the public host or domain changes, update canonical URLs, sitemap, robots.txt, structured data, and monitoring URLs together.
+
+Automated scripts cannot truthfully claim that search engines have indexed pages or that rankings have improved. Those outcomes must be observed in webmaster analytics over time.
+
 ## Self-improvement loop
 
 1. Every audit produces a timestamped artifact.
