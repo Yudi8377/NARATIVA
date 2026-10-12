@@ -9,8 +9,9 @@ const pages = [
   { path: 'learning.html', title: 'Pembelajaran' }
 ];
 const results = [];
+const slowThresholdMs = 2500;
 for (const page of pages) {
-  let result = { url: new URL(page.path, origin).href, status: 0, ok: false, elapsedMs: 0, reason: '' };
+  let result = { url: new URL(page.path, origin).href, status: 0, ok: false, slow: false, elapsedMs: 0, reason: '' };
   for (let attempt = 1; attempt <= 3; attempt++) {
     const start = Date.now();
     try {
@@ -20,6 +21,7 @@ for (const page of pages) {
       result.elapsedMs = Date.now() - start;
       const titleOk = /<title>[^<]+<\/title>/i.test(body);
       result.ok = response.ok && titleOk;
+      result.slow = result.elapsedMs > slowThresholdMs;
       result.reason = !response.ok ? 'HTTP ' + response.status : !titleOk ? 'HTML title missing' : '';
       if (result.ok) break;
     } catch (error) {
@@ -29,7 +31,7 @@ for (const page of pages) {
     if (attempt < 3) await new Promise(resolve => setTimeout(resolve, attempt * 1500));
   }
   results.push(result);
-  console.log((result.ok ? 'PASS ' : 'FAIL ') + result.url + ' status=' + result.status + ' elapsed=' + result.elapsedMs + 'ms' + (result.reason ? ' reason=' + result.reason : ''));
+  console.log((result.ok ? (result.slow ? 'WARN SLOW ' : 'PASS ') : 'FAIL ') + result.url + ' status=' + result.status + ' elapsed=' + result.elapsedMs + 'ms' + (result.reason ? ' reason=' + result.reason : ''));
 }
 const report = {
   generatedAt: new Date().toISOString(),
