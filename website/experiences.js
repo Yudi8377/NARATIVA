@@ -753,7 +753,7 @@
         renderWorkspaceResult('Timeline & shot list',sections,'Status: perencanaan produksi. Ini bukan file video hasil render; provider video AI perlu dihubungkan untuk menghasilkan klip.');
       } else if(kind==='comic'){
         const pages=Math.max(1,Math.min(100,Number(workspaceCopy('comicPages')||1))),panels=Math.max(1,Math.min(12,Number(workspaceCopy('comicPanels')||6)));
-        const dialogue=workspaceCopy('comicDialogue').split(/(?<=[.!?])\\s+|\n+/).filter(Boolean);
+        const dialogue=workspaceCopy('comicDialogue').split(/(?<=[.!?])\s+|\n+/).filter(Boolean);
         sections.push({title:'ART DIRECTION',body:workspaceCopy('comicScene'),meta:workspaceCopy('comicStyle')+' · '+pages+' halaman'});
         for(let p=1;p<=pages;p++)for(let n=1;n<=panels;n++){const index=(p-1)*panels+n;sections.push({title:'HALAMAN '+p+' · PANEL '+n,body:dialogue[(index-1)%Math.max(1,dialogue.length)]||'Tentukan aksi, ekspresi, latar, dan sudut pandang untuk panel ini.',meta:'Komposisi panel · balon dialog · SFX · kontinuitas visual'});}
         renderWorkspaceResult('Layout panel komik',sections,'Status: storyboard tekstual. Ilustrasi panel final memerlukan generator gambar atau aset gambar yang diunggah.');
