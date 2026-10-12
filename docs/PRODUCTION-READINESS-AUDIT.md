@@ -19,7 +19,7 @@ NARATIVA has a real Supabase project and a partial creator-to-reader persistence
 | Creator Studio workspace UI | **Working in browser** | Seven specialized workspaces; photo adjustments/export happen locally. |
 | Signed-out creator drafts | **Local-only** | Browser storage is not cross-device cloud persistence. |
 | Signed-in draft save/versioning | **Implemented; needs account E2E** | `experiences.js` writes `books` and `book_versions` through Supabase. |
-| Creator publication | **Implemented; needs account E2E** | Publishing updates `books.status` to `published`; reader query uses that status. RLS and reader rendering must be exercised with a real account and anonymous session. |
+| Creator publication | **Server-side guard deployed; E2E pending** | Creator Studio saves a canonical version and calls `publish-work`, which verifies the signed-in owner, rights holder/license, latest body, and audit logging before using the server role to publish. Real-account and anonymous-reader execution remains pending. |
 | Published works in Reader Space | **Partially connected** | Reader queries published rows and the latest canonical version. Current production table row count is zero, so no live creator work was available to verify. |
 | Asset upload | **Implemented; needs permission test** | Creator uploads to private `narativa-assets` bucket and uses short-lived signed URLs. Test owner isolation and expiry. |
 | AI Mentor | **Provider adapter deployed; secret status unverified** | Creator Studio now requires explicit per-request consent and calls a server-side, rate-limited OpenAI-compatible adapter. Without `NARATIVA_AI_API_KEY`, local tutorials remain available. |
@@ -42,6 +42,8 @@ NARATIVA has a real Supabase project and a partial creator-to-reader persistence
 - Performance advisor initially reported unindexed foreign keys on Etsy OAuth state, admin roles, reports, and production job assets; additive migrations added those indexes. A follow-up migration wrapped the 32 existing direct `auth.uid()` policy calls in scalar subqueries. The latest Performance Advisor no longer reports `auth_rls_initplan` or unindexed foreign-key findings; it reports unused indexes because the product tables have not yet accumulated production traffic. Do not remove those indexes solely from this early-stage signal.
 
 ## Creator → reader path to verify
+
+A manual GitHub Actions workflow and `scripts/e2e-creator-reader.mjs` now automate this path with a dedicated test account. The workflow reports SKIP when the `NARATIVA_E2E_EMAIL` and `NARATIVA_E2E_PASSWORD` repository secrets are absent; a skipped run is not a passing E2E test.
 
 1. Sign in using a dedicated test creator account.
 2. Create a uniquely titled short work and save as draft.
