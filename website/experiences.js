@@ -457,6 +457,48 @@
         answer.textContent=localAnswer+'\n\nAI generatif belum berhasil: '+(error.message||'koneksi atau konfigurasi provider belum tersedia')+'. Panduan di atas dibuat lokal; pertanyaan mungkin telah mencapai backend hanya jika provider berhasil dikonfigurasi.';
       }finally{button.disabled=false;button.textContent='Bantu saya';}
     });
+
+    $('runProductionEngine').addEventListener('click',async()=>{
+      const capability=$('engineCapability').value;
+      const prompt=$('enginePrompt').value.trim();
+      const result=$('engineResult');
+      result.hidden=false;result.replaceChildren();
+      const show=(message,kind='info')=>{const p=document.createElement('p');p.textContent=message;result.appendChild(p);result.dataset.kind=kind;};
+      if(!['image','speech'].includes(capability)){show('Engine ini belum terhubung.', 'error');return;}
+      if(!prompt){show('Tulis prompt atau teks narasi terlebih dahulu.','error');return;}
+      if(!$('engineConsent').checked){show('Belum ada data yang dikirim. Centang persetujuan jika ingin mengirim teks ke provider AI.','error');return;}
+      if(!db){show('Library Supabase belum termuat.','error');return;}
+      if(!activeBookId){show('Simpan atau buka karya terlebih dahulu agar aset dapat disimpan secara privat ke karya tersebut.','error');return;}
+      const button=$('runProductionEngine');button.disabled=true;button.textContent='Membuat aset…';
+      try{
+        const {data:sessionData,error:sessionError}=await db.auth.getSession();
+        signedInUser=sessionData.session?.user||null;
+        if(sessionError||!signedInUser)throw new Error('Masuk terlebih dahulu untuk membuat aset privat.');
+        const {data,error}=await db.functions.invoke('production-engine',{body:{
+          capability,prompt,book_id:activeBookId,consent:true,
+          owner_name:$('rightsOwner')?.value.trim()||'',
+          license:$('rightsLicense')?.value||'Hak penuh di tangan kreator',
+          instructions:capability==='speech'?'Bacakan dalam bahasa Indonesia dengan ekspresi natural dan emosional yang sesuai konteks. Suara ini dihasilkan AI.':''
+        }});
+        if(error||!data?.ok){
+          let message=data?.message||data?.error||error?.message||'Engine belum siap.';
+          try{if(error?.context?.json){const body=await error.context.json();message=body.message||body.error||message;}}catch(_){}
+          throw new Error(message);
+        }
+        const note=document.createElement('p');note.textContent='Aset berhasil dibuat dan disimpan privat ke karya. Preview URL berlaku '+data.signedUrlExpiresInSeconds+' detik.';result.appendChild(note);
+        if(data.contentType?.startsWith('image/')){
+          const img=document.createElement('img');img.src=data.signedUrl;img.alt='Ilustrasi AI yang disimpan pada karya';img.loading='lazy';img.style.maxWidth='100%';img.style.borderRadius='12px';result.appendChild(img);
+        }else if(data.contentType?.startsWith('audio/')){
+          const audio=document.createElement('audio');audio.controls=true;audio.src=data.signedUrl;audio.style.width='100%';result.appendChild(audio);
+          const disclosure=document.createElement('p');disclosure.textContent='Audio ini dibuat oleh AI, bukan rekaman suara manusia.';result.appendChild(disclosure);
+        }
+        const link=document.createElement('a');link.href=data.signedUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Buka aset (tautan sementara)';result.appendChild(link);
+        await loadAssetsForBook().catch(()=>{});
+        setNotice('Aset AI tersimpan privat. Periksa Asset Inbox untuk metadata dan buat tautan baru jika preview kedaluwarsa.','success');
+      }catch(error){show((error.message||'Aset belum dapat dibuat.')+' Tutorial lokal tetap tersedia; periksa konfigurasi provider dan kuota.', 'error');}
+      finally{button.disabled=false;button.textContent='Buat aset AI';}
+    });
+
     let editHistory = [editor.value];
     let editHistoryIndex = 0;
     let historyTimer = null;
